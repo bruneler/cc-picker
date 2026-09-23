@@ -47,6 +47,52 @@ case "$UI_LANG" in
         ;;
 esac
 
+# --- Dialog tool: zenity (GNOME), kdialog (KDE) or yad, whichever exists ---
+find_dialog() {
+    local tools=("zenity" "kdialog" "yad")
+    for d in "${tools[@]}"; do
+        command -v "$d" >/dev/null 2>&1 && { echo "$d"; return 0; }
+    done
+    return 1
+}
+DIALOG="${CC_PICKER_DIALOG:-$(find_dialog || echo "")}"
+
+# dlg_list <text> <column> <item>... — prints the chosen item
+dlg_list() {
+    local text="$1" column="$2"; shift 2
+    local args=() item
+    case "$DIALOG" in
+        zenity) zenity --list --title="cc-picker" --text="$text" --column="$column" \
+                    "$@" --height=350 --width=400 ;;
+        yad)    yad --list --title="cc-picker" --text="$text" --column="$column" \
+                    "$@" --height=350 --width=400 --print-column=1 --separator="" ;;
+        kdialog)
+            for item in "$@"; do args+=("$item" "$item"); done
+            kdialog --title "cc-picker" --menu "$text" "${args[@]}" ;;
+        *) return 1 ;;
+    esac
+}
+
+# dlg_entry <title> <text> — prints the entered text
+dlg_entry() {
+    case "$DIALOG" in
+        zenity)  zenity --entry --title="$1" --text="$2" ;;
+        yad)     yad --entry --title="$1" --text="$2" ;;
+        kdialog) kdialog --title "$1" --inputbox "$2" ;;
+        *) return 1 ;;
+    esac
+}
+
+# dlg_error <text>
+dlg_error() {
+    case "$DIALOG" in
+        zenity)  zenity --error --text="$1" ;;
+        yad)     yad --title="cc-picker" --image=dialog-error --text="$1" --button=OK ;;
+        kdialog) kdialog --title "cc-picker" --error "$1" ;;
+        *) return 1 ;;
+    esac
+}
+
 # --- Locate the claude binary ---
 find_claude_bin() {
     if [ -n "${CC_PICKER_BIN:-}" ]; then
@@ -70,7 +116,7 @@ find_claude_bin() {
 }
 
 CLAUDE_BIN="$(find_claude_bin)" || {
-    zenity --error --text="$T_NO_CLAUDE" 2>/dev/null \
+    dlg_error "$T_NO_CLAUDE" 2>/dev/null \
         || echo "cc-picker: $T_NO_CLAUDE" >&2
     exit 1
 }
@@ -124,11 +170,11 @@ open_terminal() {
 
 new_project_gui() {
     local new_name target clone_url
-    new_name=$(zenity --entry --title="$T_NEW_TITLE" --text="$T_NEW_NAME") || return 1
+    new_name=$(dlg_entry "$T_NEW_TITLE" "$T_NEW_NAME") || return 1
     [ -z "$new_name" ] && return 1
     target="$BASE/$new_name"
     mkdir -p "$target"
-    clone_url=$(zenity --entry --title="$T_CLONE_TITLE" --text="$T_CLONE_GUI") || true
+    clone_url=$(dlg_entry "$T_CLONE_TITLE" "$T_CLONE_GUI") || true
     [ -n "$clone_url" ] && git clone "$clone_url" "$target"
     echo "$target"
 }
@@ -151,12 +197,7 @@ run_gui() {
         names+=("$(basename "$p")")
     done
 
-    choice=$(zenity --list \
-        --title="cc-picker" \
-        --text="$T_PICK_PROJECT" \
-        --column="$T_COL_PROJECT" \
-        "${names[@]}" \
-        --height=350 --width=400) || exit 0
+    choice=$(dlg_list "$T_PICK_PROJECT" "$T_COL_PROJECT" "${names[@]}") || exit 0
 
     [ -z "$choice" ] && exit 0
 
@@ -198,13 +239,8 @@ if [ "${1:-}" == "--shell-mode" ]; then
     exit 0
 fi
 
-if command -v zenity >/dev/null 2>&1 && [ -n "$TERMINAL_BIN" ]; then
-    mode=$(zenity --list \
-        --title="cc-picker" \
-        --text="$T_PICK_MODE" \
-        --column="$T_COL_MODE" \
-        "GUI" "Shell" \
-        --height=200 --width=300) || exit 0
+if [ -n "$DIALOG" ] && [ -n "$TERMINAL_BIN" ]; then
+    mode=$(dlg_list "$T_PICK_MODE" "$T_COL_MODE" "GUI" "Shell") || exit 0
 
     case "$mode" in
         "GUI")   run_gui ;;

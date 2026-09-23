@@ -6,7 +6,8 @@ Thanks for your interest! A few quick notes:
 
 Please open an [issue](../../issues) and include:
 - your distro, shell and terminal emulator
-- the output of `bash --version` and `zenity --version` (if installed)
+- the output of `bash --version` and of your dialog tool's version
+  (`zenity --version`, `kdialog --version` or `yad --version`)
 - steps to reproduce
 
 Issues in English or German are both fine.

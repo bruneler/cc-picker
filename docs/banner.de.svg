@@ -4,17 +4,13 @@
       <stop offset="0" stop-color="#1d2130"/>
       <stop offset="1" stop-color="#0f1218"/>
     </linearGradient>
-    <linearGradient id="ibg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2d3240"/>
-      <stop offset="1" stop-color="#14171e"/>
-    </linearGradient>
-    <linearGradient id="folder" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#5b9bff"/>
-      <stop offset="1" stop-color="#3868d8"/>
+    <linearGradient id="ibg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e08a6b"/>
+      <stop offset="1" stop-color="#c15f3c"/>
     </linearGradient>
     <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#4f8cff" stop-opacity="0.28"/>
-      <stop offset="1" stop-color="#4f8cff" stop-opacity="0"/>
+      <stop offset="0" stop-color="#d97757" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#d97757" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
@@ -24,10 +20,10 @@
 
   <!-- icon -->
   <g transform="translate(70,110) scale(0.625)">
-    <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#ibg)" stroke="#3a4152" stroke-width="3"/>
-    <path d="M52 88 q0-12 12-12 h40 l14 14 h74 q12 0 12 12 v84 q0 12-12 12 H64 q-12 0-12-12 z" fill="url(#folder)"/>
-    <polyline points="88,132 110,150 88,168" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="124" y1="170" x2="164" y2="170" stroke="#9ff0c8" stroke-width="12" stroke-linecap="round"/>
+    <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#ibg)"/>
+    <path d="M110 98 a38 38 0 1 0 0 60" fill="none" stroke="#f4f3ee" stroke-width="18" stroke-linecap="round"/>
+    <path d="M178 98 a38 38 0 1 0 0 60" fill="none" stroke="#f4f3ee" stroke-width="18" stroke-linecap="round"/>
+    <line x1="176" y1="190" x2="206" y2="190" stroke="#2b2a27" stroke-width="14" stroke-linecap="round"/>
   </g>
 
   <!-- text -->

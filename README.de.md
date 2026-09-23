@@ -41,10 +41,11 @@ anderen KI-Coding-Tools.
     <td><img src="docs/shell-mode.de.svg" alt="Shell-Modus: nummeriertes Projektmenü im Terminal"></td>
   </tr>
   <tr>
-    <td>Auswahlfenster per <code>zenity</code>. Claude Code startet in einem
+    <td>Auswahlfenster per <code>zenity</code>, <code>kdialog</code> oder <code>yad</code> –
+    je nachdem, was dein Desktop mitbringt. Claude Code startet in einem
     neuen Terminalfenster im gewählten Ordner.</td>
     <td>Nummeriertes Menü direkt im Terminal – ideal per SSH oder ohne
-    Desktop. Wird automatisch genutzt, wenn <code>zenity</code> fehlt.</td>
+    Desktop. Wird automatisch genutzt, wenn kein Dialog-Programm installiert ist.</td>
   </tr>
 </table>
 
@@ -65,7 +66,7 @@ anlegen, optional mit `git clone`) → Claude Code startet direkt dort.
 
 | | |
 |---|---|
-| 🪟 **GUI oder Shell** | beim Start wählbar; ohne `zenity` automatischer Fallback aufs Terminal-Menü |
+| 🪟 **GUI oder Shell** | beim Start wählbar; GUI klappt mit `zenity` (GNOME & die meisten Desktops), `kdialog` (KDE) oder `yad` |
 | ➕ **Neues Projekt** | direkt aus der Auswahl anlegen, optional per `git clone` einer Remote-URL |
 | 🔍 **Auto-Erkennung** | `claude`-Binary (PATH, dann gängige Installationsorte), Terminal-Emulator (gnome-terminal, konsole, xfce4-terminal, alacritty, kitty, xterm) und deine Login-Shell (bash, zsh, fish, …) |
 | 🌐 **Deutsch & Englisch** | Sprache folgt automatisch der Systemsprache (`$LANG`) |
@@ -104,6 +105,8 @@ Zeile – nur einmal, auch bei mehrfacher Installation:
 Wer das lieber selbst macht: `CC_PICKER_NO_PATH=1 ./install.sh` – dann
 wird die Zeile nur angezeigt, nicht eingetragen.
 
+**Auch die Abhängigkeiten werden geprüft** – siehe [Abhängigkeiten](#abhängigkeiten).
+
 ## Nutzung
 
 ```bash
@@ -130,6 +133,7 @@ Alles über Umgebungsvariablen, kein Editieren des Skripts nötig:
 | `CC_PICKER_TERMINAL` | automatisch erkannt                 | zu verwendender Terminal-Emulator               |
 | `CC_PICKER_SHELL`    | automatisch erkannt (`/etc/passwd`) | Shell, die nach Claude Code weiterläuft         |
 | `CC_PICKER_LANG`     | aus `$LANG`                         | Sprache der Oberfläche: `de…` = Deutsch, sonst Englisch |
+| `CC_PICKER_DIALOG`   | automatisch erkannt                 | Dialog-Programm: `zenity`, `kdialog` oder `yad` |
 
 Beispiel:
 
@@ -137,12 +141,43 @@ Beispiel:
 CC_PICKER_BASE=~/projekte CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 ```
 
-## Voraussetzungen
+## Abhängigkeiten
 
-- `bash`
-- [`claude`](https://claude.com/product/claude-code) (Claude Code CLI), installiert und erreichbar
-- optional: `zenity` für den GUI-Modus
-- optional: `git` für „Neues Projekt erstellen" mit Klonen
+| Was | Wofür | Hinweis |
+|---|---|---|
+| `bash` | alles | auf praktisch jedem Linux vorinstalliert |
+| [`claude`](https://claude.com/product/claude-code) | alles | die Claude-Code-Kommandozeile |
+| ein Dialog-Programm | GUI-Modus & Start per Icon | eines von `zenity`, `kdialog`, `yad` – die meisten Desktops haben eines dabei |
+| ein Terminal-Emulator | GUI-Modus | gnome-terminal, konsole, xfce4-terminal, alacritty, kitty oder xterm |
+| `git` | optional | nur zum Klonen beim Anlegen neuer Projekte |
+
+**`install.sh` prüft das alles für dich.** Fehlt ein Dialog-Programm, bietet
+es an, eines zu installieren (`kdialog` unter KDE, sonst `zenity`), und zeigt
+vorher den genauen Befehl:
+
+```text
+zenity jetzt installieren? Ausgeführt wird:
+  sudo pacman -S --needed zenity
+Installieren? [J/n]
+```
+
+Ohne deine Bestätigung wird nichts installiert, und das Passwort fragt `sudo`
+selbst ab – der Installer läuft nie als root. Prüfung überspringen:
+`CC_PICKER_NO_DEPS=1 ./install.sh`.
+
+Dialog-Programm von Hand installieren:
+
+| Distribution | Befehl |
+|---|---|
+| Arch / Manjaro | `sudo pacman -S zenity` |
+| Debian / Ubuntu / Mint | `sudo apt install zenity` |
+| Fedora | `sudo dnf install zenity` |
+| openSUSE | `sudo zypper install zenity` |
+
+Unter KDE statt `zenity` einfach `kdialog` nehmen.
+
+> Ohne Dialog-Programm funktioniert cc-picker weiterhin im Terminal
+> (`cc-picker --shell-mode`), aber ein Klick aufs Icon zeigt nichts an.
 
 ## Deinstallation
 

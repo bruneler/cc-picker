@@ -40,10 +40,11 @@ instead of in your home directory or mixed up with other AI coding tools.
     <td><img src="docs/shell-mode.svg" alt="Shell mode: numbered project menu in the terminal"></td>
   </tr>
   <tr>
-    <td>A picker window via <code>zenity</code>. Claude Code starts in a new
+    <td>A picker window via <code>zenity</code>, <code>kdialog</code> or <code>yad</code> –
+    whichever your desktop has. Claude Code starts in a new
     terminal window inside the chosen folder.</td>
     <td>A numbered menu right in your terminal – great over SSH or without a
-    desktop. Used automatically when <code>zenity</code> is missing.</td>
+    desktop. Used automatically when no dialog tool is installed.</td>
   </tr>
 </table>
 
@@ -64,7 +65,7 @@ optionally via `git clone`) → Claude Code starts right there.
 
 | | |
 |---|---|
-| 🪟 **GUI or shell** | choose at startup; falls back to the terminal menu when `zenity` is missing |
+| 🪟 **GUI or shell** | choose at startup; GUI works with `zenity` (GNOME & most desktops), `kdialog` (KDE) or `yad` |
 | ➕ **New project** | create one straight from the picker, optionally by cloning a Git remote |
 | 🔍 **Auto-detection** | `claude` binary (PATH, then common install locations), terminal emulator (gnome-terminal, konsole, xfce4-terminal, alacritty, kitty, xterm) and your login shell (bash, zsh, fish, …) |
 | 🌐 **English & German** | UI language follows your system locale (`$LANG`) |
@@ -103,6 +104,8 @@ only once, even if you install repeatedly:
 Prefer to do it yourself? Run `CC_PICKER_NO_PATH=1 ./install.sh` – the line
 is then only printed, not written.
 
+**Dependencies are checked too** – see [Dependencies](#dependencies).
+
 ## Usage
 
 ```bash
@@ -129,6 +132,7 @@ Everything via environment variables – no need to edit the script:
 | `CC_PICKER_TERMINAL` | auto-detected                  | terminal emulator to use                         |
 | `CC_PICKER_SHELL`    | auto-detected (`/etc/passwd`)  | shell that keeps running after Claude Code exits |
 | `CC_PICKER_LANG`     | from `$LANG`                   | UI language: `de…` = German, otherwise English   |
+| `CC_PICKER_DIALOG`   | auto-detected                  | dialog tool: `zenity`, `kdialog` or `yad`        |
 
 Example:
 
@@ -136,12 +140,44 @@ Example:
 CC_PICKER_BASE=~/projects CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 ```
 
-## Requirements
+## Dependencies
 
-- `bash`
-- [`claude`](https://claude.com/product/claude-code) (Claude Code CLI), installed and reachable
-- optional: `zenity` for GUI mode
-- optional: `git` for cloning when creating a new project
+| What | Needed for | Notes |
+|---|---|---|
+| `bash` | everything | preinstalled on virtually every Linux system |
+| [`claude`](https://claude.com/product/claude-code) | everything | the Claude Code CLI |
+| a dialog tool | GUI mode & app-menu launch | any one of `zenity`, `kdialog`, `yad` – most desktops ship one |
+| a terminal emulator | GUI mode | gnome-terminal, konsole, xfce4-terminal, alacritty, kitty or xterm |
+| `git` | optional | only for cloning when creating a new project |
+
+**`install.sh` checks all of this for you.** If no dialog tool is found, it
+offers to install one (`kdialog` on KDE, `zenity` elsewhere) and shows the
+exact command before running anything:
+
+```text
+Install zenity now? This will run:
+  sudo pacman -S --needed zenity
+Install? [Y/n]
+```
+
+Nothing is installed without your confirmation, and `sudo` asks for your
+password itself – the installer never runs as root. To skip the check, use
+`CC_PICKER_NO_DEPS=1 ./install.sh`.
+
+Installing a dialog tool manually:
+
+| Distribution | Command |
+|---|---|
+| Arch / Manjaro | `sudo pacman -S zenity` |
+| Debian / Ubuntu / Mint | `sudo apt install zenity` |
+| Fedora | `sudo dnf install zenity` |
+| openSUSE | `sudo zypper install zenity` |
+
+On KDE, replace `zenity` with `kdialog`.
+
+> Without a dialog tool, cc-picker still works from a terminal
+> (`cc-picker --shell-mode`), but launching it from the app menu won't show
+> anything.
 
 ## Uninstall
 
