@@ -424,11 +424,11 @@ valid_name() {
 clone() {
     local url="$1" target="$2" gui="$3" err pid rc=0
     if [ "$gui" = "0" ]; then
-        git clone "$url" "$target" >&2
+        git clone -- "$url" "$target" >&2
         return
     fi
     err="$(mktemp)"
-    git clone "$url" "$target" >/dev/null 2>"$err" &
+    git clone -- "$url" "$target" >/dev/null 2>"$err" &
     pid=$!
     dlg_busy "$(printf "$T_CLONING" "$url")" "$pid"
     wait "$pid" || rc=$?

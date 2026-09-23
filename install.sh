@@ -84,14 +84,35 @@ else
     ICON_PATH="utilities-terminal"
 fi
 
+# Desktop entries decode string escapes before Exec quoting (not shell syntax).
+desktop_string() {
+    local value="$1"
+    value="${value//\\/\\\\}"
+    value="${value//$'\n'/\\n}"
+    value="${value//$'\r'/\\r}"
+    value="${value//$'\t'/\\t}"
+    printf '%s' "$value"
+}
+desktop_exec() {
+    local value="$1"
+    value="${value//\\/\\\\}"
+    value="${value//\"/\\\"}"
+    value="${value//\$/\\\$}"
+    value="${value//\`/\\\`}"
+    value="${value//%/%%}"
+    desktop_string "\"$value\""
+}
+EXEC_VALUE="$(desktop_exec "$BIN_DIR/cc-picker")"
+ICON_VALUE="$(desktop_string "$ICON_PATH")"
+
 cat > "$APP_DIR/cc-picker.desktop" << EOF
 [Desktop Entry]
 Type=Application
 Name=cc-picker
 Comment=Pick or create a project and launch Claude Code in it
 Comment[de]=Projekt wählen oder anlegen und Claude Code darin starten
-Exec=$BIN_DIR/cc-picker
-Icon=$ICON_PATH
+Exec=/usr/bin/env $EXEC_VALUE
+Icon=$ICON_VALUE
 Terminal=false
 Categories=Development;
 EOF

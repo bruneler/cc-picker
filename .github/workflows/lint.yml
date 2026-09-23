@@ -18,3 +18,7 @@ jobs:
           ./cc-picker.sh --version
           CC_PICKER_LANG=de ./cc-picker.sh --help
           ./cc-picker.sh --help
+      - name: Install functional test dependencies
+        run: sudo apt-get update && sudo apt-get install -y python3-gi desktop-file-utils
+      - name: Functional tests (isolated homes, no real Claude sessions)
+        run: /usr/bin/python3 -m unittest discover -s tests -v
