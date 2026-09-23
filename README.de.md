@@ -45,7 +45,8 @@ anderen KI-Coding-Tools.
     je nachdem, was dein Desktop mitbringt. Claude Code startet in einem
     neuen Terminalfenster im gewählten Ordner.</td>
     <td>Nummeriertes Menü direkt im Terminal – ideal per SSH oder ohne
-    Desktop. Wird automatisch genutzt, wenn kein Dialog-Programm installiert ist.</td>
+    Desktop. Start mit <code>cc-picker --shell-mode</code>; wird auch
+    automatisch genutzt, wenn kein Dialog-Programm installiert ist.</td>
   </tr>
 </table>
 
@@ -66,7 +67,8 @@ anlegen, optional mit `git clone`) → Claude Code startet direkt dort.
 
 | | |
 |---|---|
-| 🪟 **GUI oder Shell** | beim Start wählbar; GUI klappt mit `zenity` (GNOME & die meisten Desktops), `kdialog` (KDE) oder `yad` |
+| 🪟 **GUI oder Shell** | standardmäßig das Fenster, Terminal-Menü per `--shell-mode`; GUI klappt mit `zenity` (GNOME & die meisten Desktops), `kdialog` (KDE) oder `yad` |
+| 🕘 **Zuletzt benutzte oben** | zuletzt geöffnete Projekte stehen ganz oben, mit Zeitangabe |
 | ➕ **Neues Projekt** | direkt aus der Auswahl anlegen, optional per `git clone` einer Remote-URL |
 | 🔍 **Auto-Erkennung** | `claude`-Binary (PATH, dann gängige Installationsorte), Terminal-Emulator (gnome-terminal, konsole, xfce4-terminal, alacritty, kitty, xterm) und deine Login-Shell (bash, zsh, fish, …) |
 | 🌐 **Deutsch & Englisch** | Sprache folgt automatisch der Systemsprache (`$LANG`) |
@@ -110,18 +112,18 @@ wird die Zeile nur angezeigt, nicht eingetragen.
 ## Nutzung
 
 ```bash
-cc-picker                # Modus-Auswahl (GUI oder Shell)
-cc-picker --shell-mode   # direkt das Terminal-Menü
+cc-picker                # Projektliste (Fenster)
+cc-picker --shell-mode   # Terminal-Menü
 cc-picker --help         # Hilfe, Projektordner und Konfigurationsdatei
 cc-picker --version      # Version anzeigen
 ```
 
 Oder im Anwendungsmenü nach **cc-picker** suchen.
 
-1. Modus wählen: **GUI** oder **Shell**
-2. Projekt aus der Liste wählen – oder **„+ Neues Projekt erstellen"**
-   (Name eingeben, optional Git-Remote-URL zum Klonen)
-3. Ein Terminal öffnet sich im gewählten Ordner, `claude` startet dort.
+1. Projekt wählen – zuletzt benutzte stehen oben – oder
+   **„+ Neues Projekt erstellen"** (Name eingeben, optional Git-Remote-URL
+   zum Klonen; beim Klonen zeigt ein Fortschrittsfenster den Stand)
+2. Ein Terminal öffnet sich im gewählten Ordner, `claude` startet dort.
    Beendest du Claude Code, bleibt die Shell im Projektordner offen.
 
 ## Konfiguration
@@ -147,6 +149,7 @@ nie ausgeführt, und nur diese Schlüssel werden beachtet:
 | `CC_PICKER_SHELL`    | automatisch erkannt (`/etc/passwd`) | Shell, die nach Claude Code weiterläuft         |
 | `CC_PICKER_LANG`     | aus `$LANG`                         | Sprache der Oberfläche: `de…` = Deutsch, sonst Englisch |
 | `CC_PICKER_DIALOG`   | automatisch erkannt                 | Dialog-Programm: `zenity`, `kdialog` oder `yad` |
+| `CC_PICKER_MODE`     | `gui`                               | was `cc-picker` öffnet: `gui` (Projektliste), `shell` (Terminal-Menü) oder `ask` (fragen) |
 
 Einmaliges Beispiel per Umgebungsvariablen:
 
@@ -189,8 +192,8 @@ Dialog-Programm von Hand installieren:
 
 Unter KDE statt `zenity` einfach `kdialog` nehmen.
 
-> Ohne Dialog-Programm funktioniert cc-picker weiterhin im Terminal
-> (`cc-picker --shell-mode`), aber ein Klick aufs Icon zeigt nichts an.
+> Ohne Dialog-Programm weicht cc-picker aufs Terminal-Menü aus – auch beim
+> Start über das Anwendungsmenü, sofern ein Terminal-Emulator installiert ist.
 
 ## Deinstallation
 
@@ -203,6 +206,14 @@ rm ~/.local/bin/cc-picker \
 Deine Projektordner bleiben dabei unberührt. Einen von `install.sh`
 ergänzten PATH-Eintrag (markiert mit `# added by cc-picker install.sh`)
 kannst du bei Bedarf aus deiner Shell-Config löschen.
+
+Einstellungen und die Liste der zuletzt benutzten Projekte liegen in zwei
+kleinen lokalen Dateien – es wird nichts irgendwohin gesendet. Auch diese
+entfernen:
+
+```bash
+rm -r ~/.config/cc-picker ~/.local/state/cc-picker
+```
 
 ## Mitwirken
 

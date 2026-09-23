@@ -13,8 +13,8 @@
       <circle cx="34" cy="38" r="17" fill="#4f8cff"/>
       <text x="34" y="44" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">1</text>
       <text x="62" y="45" font-size="20" font-weight="700" fill="#fff">Launch</text>
-      <text x="20" y="92" font-size="15" fill="#aeb6c7">from a terminal or</text>
-      <text x="20" y="114" font-size="15" fill="#aeb6c7">your app menu</text>
+      <text x="20" y="92" font-size="15" fill="#aeb6c7">from your app menu</text>
+      <text x="20" y="114" font-size="15" fill="#aeb6c7">or a terminal</text>
       <text x="20" y="156" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#5fe0a0">$ cc-picker</text>
     </g>
     <!-- card 2 -->
@@ -22,19 +22,19 @@
       <rect width="240" height="180" rx="14" fill="#1b1f29" stroke="#2c3240" stroke-width="1.5"/>
       <circle cx="34" cy="38" r="17" fill="#4f8cff"/>
       <text x="34" y="44" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">2</text>
-      <text x="62" y="45" font-size="20" font-weight="700" fill="#fff">Mode</text>
-      <text x="20" y="92" font-size="15" fill="#aeb6c7">pick via a window</text>
-      <text x="20" y="114" font-size="15" fill="#aeb6c7">(zenity) or a text menu</text>
-      <text x="20" y="156" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#5fe0a0">GUI | Shell</text>
+      <text x="62" y="45" font-size="20" font-weight="700" fill="#fff">Pick</text>
+      <text x="20" y="92" font-size="15" fill="#aeb6c7">recently used projects</text>
+      <text x="20" y="114" font-size="15" fill="#aeb6c7">are listed first</text>
+      <text x="20" y="156" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#5fe0a0">my-webapp · 2 h ago</text>
     </g>
     <!-- card 3 -->
     <g transform="translate(630,40)">
       <rect width="240" height="180" rx="14" fill="#1b1f29" stroke="#2c3240" stroke-width="1.5"/>
       <circle cx="34" cy="38" r="17" fill="#4f8cff"/>
       <text x="34" y="44" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">3</text>
-      <text x="62" y="45" font-size="20" font-weight="700" fill="#fff">Project</text>
-      <text x="20" y="92" font-size="15" fill="#aeb6c7">choose one or create one,</text>
-      <text x="20" y="114" font-size="15" fill="#aeb6c7">optionally via git clone</text>
+      <text x="62" y="45" font-size="20" font-weight="700" fill="#fff">…or create</text>
+      <text x="20" y="92" font-size="15" fill="#aeb6c7">a new folder, optionally</text>
+      <text x="20" y="114" font-size="15" fill="#aeb6c7">via git clone</text>
       <text x="20" y="156" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#5fe0a0">+ Create new project</text>
     </g>
     <!-- card 4 -->

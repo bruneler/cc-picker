@@ -4,9 +4,7 @@
       <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.28"/>
     </filter>
   </defs>
-  <g font-family="Cantarell, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" filter="url(#shadow)">
-    <rect x="10" y="10" width="560" height="416" rx="12" fill="#fafafa" stroke="#d4d6db"/>
-  </g>
+  <rect x="10" y="10" width="560" height="416" rx="12" fill="#fafafa" stroke="#d4d6db" filter="url(#shadow)"/>
   <g font-family="Cantarell, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
     <path d="M10 22 q0-12 12-12 h536 q12 0 12 12 v36 H10 z" fill="#ebecef"/>
     <line x1="10" y1="58" x2="570" y2="58" stroke="#d4d6db"/>
@@ -19,20 +17,25 @@
     <rect x="34" y="108" width="512" height="232" rx="8" fill="#ffffff" stroke="#d4d6db"/>
     <path d="M34 116 q0-8 8-8 h496 q8 0 8 8 v26 H34 z" fill="#f3f4f6"/>
     <line x1="34" y1="142" x2="546" y2="142" stroke="#e1e3e7"/>
+    <line x1="376" y1="112" x2="376" y2="138" stroke="#e1e3e7"/>
     <text x="50" y="131" font-size="14" font-weight="700" fill="#2e3036">Project</text>
+    <text x="390" y="131" font-size="14" font-weight="700" fill="#2e3036">Last used</text>
 
     <g font-size="15" fill="#2e3036">
       <text x="50" y="166">+ Create new project</text>
-      <text x="50" y="202">api-server</text>
-      <rect x="38" y="214" width="504" height="34" rx="6" fill="#3584e4"/>
-      <text x="50" y="237" fill="#ffffff">my-webapp</text>
+      <rect x="38" y="178" width="504" height="34" rx="6" fill="#3584e4"/>
+      <text x="50" y="201" fill="#ffffff">my-webapp</text>
+      <text x="390" y="201" fill="#ffffff">2 h ago</text>
+      <text x="50" y="238">api-server</text>
+      <text x="390" y="238" fill="#6b6e76">yesterday</text>
       <text x="50" y="274">notes-app</text>
+      <text x="390" y="274" fill="#6b6e76">5 days ago</text>
       <text x="50" y="310">website-relaunch</text>
     </g>
 
     <rect x="310" y="364" width="112" height="40" rx="8" fill="#e6e7ea"/>
     <text x="366" y="389" text-anchor="middle" font-size="15" fill="#2e3036">Cancel</text>
     <rect x="434" y="364" width="112" height="40" rx="8" fill="#3584e4"/>
-    <text x="490" y="389" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">OK</text>
+    <text x="490" y="389" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">Start</text>
   </g>
 </svg>

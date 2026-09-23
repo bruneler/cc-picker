@@ -17,6 +17,12 @@ First public release.
 - English and German UI, chosen from `$LANG` (override: `CC_PICKER_LANG`)
 - Config file `~/.config/cc-picker/config`, which also applies when
   launching from the app menu; environment variables take precedence
+- Recently used projects are listed first, with a "last used" column
+  (stored locally in `~/.local/state/cc-picker/recent`)
+- Progress indicator while cloning in GUI mode; errors show git's reason
+- Clear button labels ("Start"/"Cancel") and the app icon on yad/kdialog
+  windows
+- `CC_PICKER_MODE`: `gui` (default), `shell` or `ask`
 - `--help` and `--version`
 - `install.sh`: installs script, app menu entry and icon; adds `~/.local/bin`
   to `PATH` for bash, zsh, fish or `~/.profile` if needed
@@ -29,6 +35,11 @@ First public release.
 
 ### Changed
 - Default projects folder is now `~/claude-projects`
+- `cc-picker` opens the project list directly instead of asking
+  "GUI or Shell?" first
+- Without a dialog tool, launching from the app menu opens the terminal
+  menu instead of doing nothing
+- Hidden folders are no longer listed as projects
 
 ### Fixed
 - `CC_PICKER_BIN` is honored even when `claude` isn't found on `PATH`
