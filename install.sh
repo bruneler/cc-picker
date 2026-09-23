@@ -1,6 +1,10 @@
 #!/bin/bash
 # install.sh — installs cc-picker for the current user
 #
+# Steps: copy the script to ~/.local/bin → create the app menu entry and
+# icon → make sure ~/.local/bin is in PATH → check dependencies and offer
+# to install a dialog tool if none is present. Never runs as root.
+#
 # The translated T_* messages are our own constants and are used as printf
 # format strings on purpose (they contain %s placeholders).
 # shellcheck disable=SC2059
@@ -29,7 +33,7 @@ case "$UI_LANG" in
         T_DEP_NO_CLAUDE="nicht gefunden – bitte Claude Code installieren: https://claude.com/product/claude-code"
         T_DEP_NO_GIT="nicht gefunden (optional, nur zum Klonen neuer Projekte)"
         T_DEP_NO_TERM="kein unterstütztes Terminal gefunden – GUI-Modus nicht verfügbar. Unterstützt: %s"
-        T_DEP_NO_DIALOG="kein Dialog-Programm (zenity, kdialog, yad) gefunden – ohne eines gibt es nur das Terminal-Menü, und der Start per Icon funktioniert nicht."
+        T_DEP_NO_DIALOG="kein Dialog-Programm (zenity, kdialog, yad) gefunden – ohne eines gibt es nur das Terminal-Menü, auch beim Start per Icon."
         T_DEP_ASK="%s jetzt installieren? Ausgeführt wird:"
         T_DEP_PROMPT="Installieren? [J/n] "
         T_DEP_YES_RE='^([jJyY].*)?$'
@@ -55,7 +59,7 @@ case "$UI_LANG" in
         T_DEP_NO_CLAUDE="not found – please install Claude Code: https://claude.com/product/claude-code"
         T_DEP_NO_GIT="not found (optional, only needed to clone new projects)"
         T_DEP_NO_TERM="no supported terminal emulator found – GUI mode unavailable. Supported: %s"
-        T_DEP_NO_DIALOG="no dialog tool (zenity, kdialog, yad) found – without one only the terminal menu works, and launching from the app menu won't."
+        T_DEP_NO_DIALOG="no dialog tool (zenity, kdialog, yad) found – without one you only get the terminal menu, also when launching from the app menu."
         T_DEP_ASK="Install %s now? This will run:"
         T_DEP_PROMPT="Install? [Y/n] "
         T_DEP_YES_RE='^([yY].*)?$'

@@ -6,6 +6,14 @@
 # of Anthropic, PBC. This tool simply launches the `claude` CLI in a
 # chosen project directory.
 #
+# Flow: load config → pick UI language → parse options → detect claude,
+# dialog tool, terminal and shell → show the project list (window or
+# terminal menu) → open a terminal in the chosen folder and start claude.
+#
+# Convention: functions return values on stdout, which callers capture with
+# $(...). All messages, prompts and git output must therefore go to stderr,
+# or they would end up in the returned value.
+#
 # The translated T_* messages are our own constants; some are used as printf
 # format strings on purpose (they contain %s/%d placeholders).
 # shellcheck disable=SC2059
@@ -182,6 +190,7 @@ icon_args() {
         kdialog) printf '%s\0' "--icon" "$ICON" ;;
     esac
 }
+# NUL-separated, so option values may contain spaces
 mapfile -d '' ICON_ARGS < <(icon_args)
 
 # dlg_list <text> <ok-label> <column> <item>... — prints the chosen item
@@ -337,6 +346,9 @@ mkdir -p "$BASE"
 open_terminal() {
     local dir="$1"; shift
     local full_cmd
+    # %q-quote everything so paths with spaces or quotes survive `bash -c`;
+    # exec the user's shell afterwards so the terminal stays open in <dir>
+    # once claude exits
     full_cmd="$(printf '%q ' "$@"); exec $(printf '%q' "$USER_SHELL")"
     case "$TERMINAL_BIN" in
         gnome-terminal)   gnome-terminal --working-directory="$dir" -- bash -c "$full_cmd" ;;
@@ -375,9 +387,10 @@ ago() {
     fi
 }
 
-# list_projects — prints "<epoch>\t<name>" for every project folder (epoch 0 =
-# never used),
-# recently used first, then the rest alphabetically
+# list_projects — prints "<epoch>\t<name>" for every project folder:
+# recently used first, then the rest alphabetically. Epoch 0 means "never
+# used" – an empty first field would be swallowed by `read`, because a tab
+# counts as whitespace in IFS.
 list_projects() {
     local ts name
     declare -A seen=()
@@ -462,6 +475,8 @@ new_project_shell() {
     }
 }
 
+# run_gui — project list in a dialog window; opens a new terminal with
+# claude in the chosen (or newly created) project
 run_gui() {
     local items=("$T_NEW_ENTRY" "") choice target ts name last
     while IFS=$'\t' read -r ts name; do
@@ -483,6 +498,8 @@ run_gui() {
     open_terminal "$target" "$CLAUDE_BIN"
 }
 
+# run_shell — numbered menu in the current terminal; replaces this process
+# with claude in the chosen (or newly created) project
 run_shell() {
     local options=() choice target ts name
     while IFS=$'\t' read -r ts name; do
@@ -517,6 +534,9 @@ start_shell_mode() {
     fi
 }
 
+# --- Main ---
+# --shell-mode → terminal menu in place; no dialog tool or terminal → terminal
+# menu; otherwise as set in CC_PICKER_MODE (default: project list window)
 if [ "$SHELL_MODE" = "1" ]; then
     run_shell
     exit 0
