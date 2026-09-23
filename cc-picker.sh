@@ -65,7 +65,7 @@ case "$UI_LANG" in
         T_NO_TERMINAL="Kein unterstütztes Terminal gefunden. Bitte CC_PICKER_TERMINAL setzen."
         T_NEW_TITLE="Neues Projekt"
         T_NEW_NAME="Name des neuen Projektordners:"
-        T_BAD_NAME="Ungültiger Name. Erlaubt ist ein einfacher Ordnername: kein '/', nicht mit '.' oder '-' beginnend."
+        T_BAD_NAME="Ungültiger Name. Erlaubt ist ein einfacher Ordnername: kein '/', keine Tabulatoren oder Zeilenumbrüche, nicht mit '.' oder '-' beginnend, keine Leerzeichen am Anfang oder Ende."
         T_CLONE_TITLE="Git-Repo (optional)"
         T_CLONE_GUI="Git-Remote-URL zum Klonen, oder leer lassen für leeren Ordner:"
         T_CLONE_SHELL="Git-Remote-URL zum Klonen (leer lassen für leeren Ordner):"
@@ -96,7 +96,7 @@ case "$UI_LANG" in
         T_NO_TERMINAL="No supported terminal emulator found. Please set CC_PICKER_TERMINAL."
         T_NEW_TITLE="New project"
         T_NEW_NAME="Name of the new project folder:"
-        T_BAD_NAME="Invalid name. Use a plain folder name: no '/', not starting with '.' or '-'."
+        T_BAD_NAME="Invalid name. Use a plain folder name: no '/', no tabs or line breaks, not starting with '.' or '-', no spaces at the start or end."
         T_CLONE_TITLE="Git repo (optional)"
         T_CLONE_GUI="Git remote URL to clone, or leave empty for an empty folder:"
         T_CLONE_SHELL="Git remote URL to clone (leave empty for an empty folder):"
@@ -402,16 +402,21 @@ list_projects() {
             fi
         done < "$RECENT_FILE"
     fi
-    while IFS= read -r name; do
+    # NUL-separated, so no folder name can split into two entries; names with
+    # control characters (created outside cc-picker) are skipped
+    while IFS= read -r -d '' name; do
+        case "$name" in *[[:cntrl:]]*) continue ;; esac
         [ -z "${seen[$name]:-}" ] && printf '0\t%s\n' "$name"
-    done < <(find "$BASE" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%f\n' | sort)
+    done < <(find "$BASE" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%f\0' | sort -z)
     return 0
 }
 
-# A project name must be a single, plain folder name inside $BASE
+# A project name must be a single, plain folder name inside $BASE: no "/",
+# no control characters (tabs and newlines would break the list formats),
+# no leading "." or "-", no leading or trailing whitespace
 valid_name() {
     case "$1" in
-        ""|.*|-*|*/*|*$'\n'*) return 1 ;;
+        ""|.*|-*|*/*|*[[:cntrl:]]*|[[:space:]]*|*[[:space:]]) return 1 ;;
     esac
 }
 
@@ -452,7 +457,8 @@ new_project_gui() {
         valid_name "$new_name" && break
         dlg_error "$T_BAD_NAME" || true
     done
-    clone_url=$(dlg_entry "$T_CLONE_TITLE" "$T_CLONE_GUI") || true
+    # Cancel aborts; an empty field with "Next" means "empty folder"
+    clone_url=$(dlg_entry "$T_CLONE_TITLE" "$T_CLONE_GUI") || return 1
     create_project "$new_name" "$clone_url" 1 || {
         dlg_error "$T_CLONE_FAIL $clone_url
 $CLONE_ERROR" || true
@@ -468,7 +474,8 @@ new_project_shell() {
         valid_name "$new_name" && break
         echo "$T_BAD_NAME" >&2
     done
-    read -rp "$T_CLONE_SHELL " clone_url || clone_url=""
+    # Ctrl+D aborts; an empty line means "empty folder"
+    read -rp "$T_CLONE_SHELL " clone_url || return 1
     create_project "$new_name" "$clone_url" 0 || {
         echo "$T_CLONE_FAIL $clone_url" >&2
         return 1

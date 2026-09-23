@@ -56,11 +56,16 @@ another tool on the same machine), you usually want:
 
 - 📂 **separate working copies per tool** instead of shared folders
 - ⚡ **quick switching between projects** without memorizing paths
-- 🔒 **no accidental Claude Code sessions in your entire home directory**
-  (needlessly broad file and execution access)
+- 🏠 **no accidental Claude Code sessions with your whole home directory**
+  as the working folder
 
 cc-picker solves this with a simple picker: choose a folder (or create one,
 optionally via `git clone`) → Claude Code starts right there.
+
+> **Not a sandbox:** the start folder is Claude Code's working folder, not a
+> security boundary. Depending on its permissions, Claude Code can still read,
+> change or run things outside of it. What it may do is controlled by Claude
+> Code's own permission settings – cc-picker doesn't change them.
 
 ## Features
 

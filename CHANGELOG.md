@@ -40,6 +40,7 @@ First public release.
 - Without a dialog tool, launching from the app menu opens the terminal
   menu instead of doing nothing
 - Hidden folders are no longer listed as projects
+- Docs: state clearly that the start folder is not a security boundary
 
 ### Fixed
 - `CC_PICKER_BIN` is honored even when `claude` isn't found on `PATH`
@@ -49,6 +50,11 @@ First public release.
   (xfce4-terminal previously broke on `'`)
 - A failed `git clone` shows an error and leaves no empty folder behind
 - Quitting the shell menu with Ctrl+D exits cleanly (exit code 0)
+- Cancelling the Git question no longer creates a project; an empty field
+  still means "empty folder"
+- Project names with tabs, line breaks or other control characters, or with
+  leading/trailing spaces, are rejected; existing folders with control
+  characters are left out of the list instead of breaking it
 
 ## 0.1 – internal
 

@@ -57,11 +57,17 @@ anderes Tool auf demselben Rechner), will in der Regel:
 
 - 📂 **getrennte Arbeitskopien pro Tool** statt gemeinsam genutzter Ordner
 - ⚡ **schnellen Projektwechsel**, ohne sich Pfade merken zu müssen
-- 🔒 **Claude Code nicht versehentlich im ganzen Home-Verzeichnis** starten
-  (unnötig weitreichende Datei- und Ausführungsrechte)
+- 🏠 **Claude Code nicht versehentlich mit dem ganzen Home-Verzeichnis** als
+  Arbeitsordner starten
 
 cc-picker löst das mit einer einfachen Auswahlliste: Ordner wählen (oder neu
 anlegen, optional mit `git clone`) → Claude Code startet direkt dort.
+
+> **Keine Sandbox:** Der Startordner ist der Arbeitsordner von Claude Code,
+> keine Sicherheitsgrenze. Je nach Berechtigungen kann Claude Code auch
+> außerhalb davon lesen, ändern oder Befehle ausführen. Was es darf, regeln
+> die Berechtigungseinstellungen von Claude Code selbst – cc-picker ändert
+> daran nichts.
 
 ## Features
 
