@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" width="1200" height="380">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d2130"/>
+      <stop offset="1" stop-color="#0f1218"/>
+    </linearGradient>
+    <linearGradient id="ibg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2d3240"/>
+      <stop offset="1" stop-color="#14171e"/>
+    </linearGradient>
+    <linearGradient id="folder" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b9bff"/>
+      <stop offset="1" stop-color="#3868d8"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4f8cff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#4f8cff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="380" rx="24" fill="url(#bg)"/>
+  <circle cx="160" cy="190" r="190" fill="url(#glow)"/>
+  <circle cx="990" cy="190" r="240" fill="url(#glow)" opacity="0.6"/>
+
+  <!-- icon -->
+  <g transform="translate(70,110) scale(0.625)">
+    <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#ibg)" stroke="#3a4152" stroke-width="3"/>
+    <path d="M52 88 q0-12 12-12 h40 l14 14 h74 q12 0 12 12 v84 q0 12-12 12 H64 q-12 0-12-12 z" fill="url(#folder)"/>
+    <polyline points="88,132 110,150 88,168" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="124" y1="170" x2="164" y2="170" stroke="#9ff0c8" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <!-- text -->
+  <text x="262" y="178" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="64" font-weight="700" fill="#ffffff">cc-picker</text>
+  <text x="264" y="222" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="23" fill="#b4bccd">Projekt wählen. Claude Code startet genau dort.</text>
+  <text x="264" y="262" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#7f889c">GUI · Shell · Auto-Erkennung · MIT</text>
+
+  <!-- mini terminal -->
+  <g transform="translate(812,70)">
+    <rect width="340" height="240" rx="14" fill="#0a0c11" stroke="#2c3240" stroke-width="2"/>
+    <circle cx="22" cy="20" r="5.5" fill="#ff5f57"/>
+    <circle cx="40" cy="20" r="5.5" fill="#febc2e"/>
+    <circle cx="58" cy="20" r="5.5" fill="#28c840"/>
+    <rect x="12" y="110" width="316" height="26" rx="5" fill="#4f8cff" opacity="0.22"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#c9d1e0">
+      <text x="20" y="64"><tspan fill="#5fe0a0">$</tspan> cc-picker</text>
+      <text x="20" y="102" fill="#8b93a6">1) api-server</text>
+      <text x="20" y="128" fill="#ffffff">2) mein-webprojekt</text>
+      <text x="20" y="154" fill="#8b93a6">3) notizen-app</text>
+      <text x="20" y="180" fill="#8b93a6">4) + Neues Projekt erstellen</text>
+      <text x="20" y="218"><tspan fill="#5b9bff">→</tspan> claude in …/mein-webprojekt</text>
+    </g>
+  </g>
+</svg>

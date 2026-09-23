@@ -1,39 +1,71 @@
-# cc-picker
+<p align="center">
+  <img src="docs/banner.svg" alt="cc-picker – Projekt wählen, Claude Code startet genau dort" width="100%">
+</p>
 
-Ein kleines Kommandozeilen-/GUI-Tool, das dir hilft, [Claude Code](https://claude.com/product/claude-code)
-sauber getrennt in verschiedenen Projektordnern zu starten — statt immer im
-Home-Verzeichnis oder vermischt mit anderen KI-Coding-Tools.
+<p align="center">
+  <img src="https://img.shields.io/badge/Lizenz-MIT-4f8cff" alt="Lizenz: MIT">
+  <img src="https://img.shields.io/badge/Bash-%E2%89%A5%204-5fe0a0?logo=gnubash&logoColor=white" alt="Bash">
+  <img src="https://img.shields.io/badge/Plattform-Linux-8b93a6?logo=linux&logoColor=white" alt="Linux">
+</p>
+
+**cc-picker** ist ein kleiner Projekt-Launcher für
+[Claude Code](https://claude.com/product/claude-code): Du wählst einen
+Projektordner aus einer Liste (oder legst einen neuen an), und Claude Code
+startet **genau dort** – statt im Home-Verzeichnis oder vermischt mit
+anderen KI-Coding-Tools.
 
 > **Hinweis:** cc-picker ist ein unabhängiges Community-Projekt und **nicht mit
 > Anthropic verbunden oder von Anthropic autorisiert**. "Claude" ist eine
 > Marke von Anthropic, PBC. Dieses Tool startet lediglich die offizielle
 > `claude`-Kommandozeile in einem von dir gewählten Ordner.
 
+## So funktioniert's
+
+<p align="center">
+  <img src="docs/flow.svg" alt="Ablauf: 1. cc-picker starten, 2. Modus GUI oder Shell wählen, 3. Projekt wählen oder neu anlegen, 4. Terminal öffnet sich im Projektordner und startet claude" width="100%">
+</p>
+
+## Zwei Modi
+
+<table>
+  <tr>
+    <th width="50%">🖱️ GUI-Modus</th>
+    <th width="50%">⌨️ Shell-Modus</th>
+  </tr>
+  <tr>
+    <td><img src="docs/gui-mode.svg" alt="GUI-Modus: zenity-Fenster mit Projektliste"></td>
+    <td><img src="docs/shell-mode.svg" alt="Shell-Modus: nummeriertes Projektmenü im Terminal"></td>
+  </tr>
+  <tr>
+    <td>Auswahlfenster per <code>zenity</code>. Claude Code startet in einem
+    neuen Terminalfenster im gewählten Ordner.</td>
+    <td>Nummeriertes Menü direkt im Terminal – ideal per SSH oder ohne
+    Desktop. Wird automatisch genutzt, wenn <code>zenity</code> fehlt.</td>
+  </tr>
+</table>
+
 ## Warum?
 
-Wenn du mehrere KI-Coding-Tools parallel nutzt (z. B. Claude Code und ein
-anderes Tool auf demselben Rechner), will man in der Regel:
+Wer mehrere KI-Coding-Tools parallel nutzt (z. B. Claude Code und ein
+anderes Tool auf demselben Rechner), will in der Regel:
 
-- getrennte, unabhängige Arbeitskopien pro Tool statt gemeinsam genutzter Ordner
-- schnellen Wechsel zwischen mehreren Projekten, ohne sich Pfade zu merken
-- Claude Code nicht versehentlich im gesamten Home-Verzeichnis starten
-  (unnötig weitreichende Datei-/Ausführungsrechte)
+- 📂 **getrennte Arbeitskopien pro Tool** statt gemeinsam genutzter Ordner
+- ⚡ **schnellen Projektwechsel**, ohne sich Pfade merken zu müssen
+- 🔒 **Claude Code nicht versehentlich im ganzen Home-Verzeichnis** starten
+  (unnötig weitreichende Datei- und Ausführungsrechte)
 
 cc-picker löst das mit einer einfachen Auswahlliste: Ordner wählen (oder neu
 anlegen, optional mit `git clone`) → Claude Code startet direkt dort.
 
 ## Features
 
-- **GUI- oder Shell-Modus** — beim Start wählbar (GUI via `zenity`, sonst
-  automatischer Fallback auf Terminal-Menü)
-- **Neues Projekt erstellen** direkt aus der Auswahl heraus, optional mit
-  `git clone` einer Remote-URL
-- **Automatische Erkennung:**
-  - `claude`-Binary (PATH, dann gängige Installationsorte)
-  - verfügbarer Terminal-Emulator (gnome-terminal, konsole, xfce4-terminal,
-    alacritty, kitty, xterm)
-  - eigene Login-Shell (bash, zsh, fish, ...) für die Session nach Claude Code
-- **Keine hartcodierten Pfade** — alles über Umgebungsvariablen konfigurierbar
+| | |
+|---|---|
+| 🪟 **GUI oder Shell** | beim Start wählbar; ohne `zenity` automatischer Fallback aufs Terminal-Menü |
+| ➕ **Neues Projekt** | direkt aus der Auswahl anlegen, optional per `git clone` einer Remote-URL |
+| 🔍 **Auto-Erkennung** | `claude`-Binary (PATH, dann gängige Installationsorte), Terminal-Emulator (gnome-terminal, konsole, xfce4-terminal, alacritty, kitty, xterm) und deine Login-Shell (bash, zsh, fish, …) |
+| ⚙️ **Keine hartcodierten Pfade** | alles über Umgebungsvariablen konfigurierbar |
+| 🧩 **Desktop-Integration** | eigenes Icon im Anwendungsmenü |
 
 ## Installation
 
@@ -43,43 +75,51 @@ cd cc-picker
 ./install.sh
 ```
 
-Das Skript installiert:
-- `~/.local/bin/cc-picker` (ausführbares Skript)
-- `~/.local/share/applications/cc-picker.desktop` (App-Icon fürs Anwendungsmenü)
+<img src="cc-picker.svg" alt="cc-picker App-Icon" width="72" align="right">
 
-Falls `~/.local/bin` noch nicht in deinem `PATH` ist:
+Das Skript installiert:
+
+| Datei | Zweck |
+|---|---|
+| `~/.local/bin/cc-picker` | ausführbares Skript |
+| `~/.local/share/applications/cc-picker.desktop` | Eintrag im Anwendungsmenü |
+| `~/.local/share/icons/cc-picker.svg` | App-Icon |
+
+Falls `~/.local/bin` noch nicht in deinem `PATH` ist, in `~/.bashrc` bzw.
+`~/.zshrc` eintragen:
+
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
-(in `~/.bashrc` bzw. `~/.zshrc` eintragen, damit es dauerhaft gilt.)
 
 ## Nutzung
 
-Per Terminal:
 ```bash
-cc-picker
+cc-picker                # Modus-Auswahl (GUI oder Shell)
+cc-picker --shell-mode   # direkt das Terminal-Menü
 ```
 
-Per Icon: im Anwendungsmenü nach **cc-picker** suchen.
+Oder im Anwendungsmenü nach **cc-picker** suchen.
 
-Ablauf:
 1. Modus wählen: **GUI** oder **Shell**
-2. Projekt aus der Liste wählen — oder **„+ Neues Projekt erstellen"**
+2. Projekt aus der Liste wählen – oder **„+ Neues Projekt erstellen"**
    (Name eingeben, optional Git-Remote-URL zum Klonen)
-3. Ein neues Terminal öffnet sich im gewählten Ordner, `claude` startet dort
+3. Ein Terminal öffnet sich im gewählten Ordner, `claude` startet dort.
+   Beendest du Claude Code, bleibt die Shell im Projektordner offen.
 
 ## Konfiguration
 
 Alles über Umgebungsvariablen, kein Editieren des Skripts nötig:
 
-| Variable            | Standard                          | Bedeutung                                  |
-|---------------------|------------------------------------|---------------------------------------------|
-| `CC_PICKER_BASE`    | `~/Entwicklung/claude-code`        | Ordner, in dem Projekte gesucht/angelegt werden |
-| `CC_PICKER_BIN`     | automatisch erkannt                | Pfad zur `claude`-Binary                   |
-| `CC_PICKER_TERMINAL`| automatisch erkannt                | Zu verwendender Terminal-Emulator          |
-| `CC_PICKER_SHELL`   | automatisch erkannt (`/etc/passwd`)| Shell, die nach Claude Code weiterläuft    |
+| Variable             | Standard                            | Bedeutung                                       |
+|----------------------|-------------------------------------|-------------------------------------------------|
+| `CC_PICKER_BASE`     | `~/Entwicklung/claude-code`         | Ordner, in dem Projekte gesucht/angelegt werden |
+| `CC_PICKER_BIN`      | automatisch erkannt                 | Pfad zur `claude`-Binary                        |
+| `CC_PICKER_TERMINAL` | automatisch erkannt                 | zu verwendender Terminal-Emulator               |
+| `CC_PICKER_SHELL`    | automatisch erkannt (`/etc/passwd`) | Shell, die nach Claude Code weiterläuft         |
 
 Beispiel:
+
 ```bash
 CC_PICKER_BASE=~/projekte CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 ```
@@ -89,11 +129,21 @@ CC_PICKER_BASE=~/projekte CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 - `bash`
 - [`claude`](https://claude.com/product/claude-code) (Claude Code CLI), installiert und erreichbar
 - optional: `zenity` für den GUI-Modus
-- optional: `git` für die „Neues Projekt erstellen"-Funktion mit Klonen
+- optional: `git` für „Neues Projekt erstellen" mit Klonen
+
+## Deinstallation
+
+```bash
+rm ~/.local/bin/cc-picker \
+   ~/.local/share/applications/cc-picker.desktop \
+   ~/.local/share/icons/cc-picker.svg
+```
+
+Deine Projektordner bleiben dabei unberührt.
 
 ## Mitwirken
 
-Issues und Pull Requests willkommen — siehe [CONTRIBUTING.md](CONTRIBUTING.md).
+Issues und Pull Requests willkommen – siehe [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Lizenz
 
