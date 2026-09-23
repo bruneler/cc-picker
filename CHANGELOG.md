@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Quote desktop launcher paths correctly, including spaces and special characters.
+- Add isolated functional tests to CI and separate Git options from clone URLs.
+- Version the website with local fonts and cc-picker.brue.nu metadata.
+
 All notable changes to cc-picker are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/).

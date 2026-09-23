@@ -44,3 +44,15 @@ the PR and someone can help with the other.
 ## Code of conduct
 
 Be kind and respectful. That's it.
+
+## Functional checks
+
+Run `/usr/bin/python3 -m unittest discover -s tests -v` on Linux with
+`python3-gi` and `desktop-file-utils` installed (Arch: `python-gobject`,
+`desktop-file-utils`). Tests use temporary homes and fake Claude executables;
+they do not change your installation or start real Claude sessions. CI runs
+them on every push and pull request.
+
+The published static website is in `website/`. It needs no build step. Keep
+fonts and their license together, and exclude design drafts and source-only
+preview generators. Production hosting is maintained in the infrastructure repo.

@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>cc-picker</title>
+<meta name="description" content="Pick a project folder and Claude Code starts right inside it. A small, free launcher for Linux – window or terminal menu, recent projects first.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="canonical" href="https://cc-picker.brue.nu/">
+<meta property="og:url" content="https://cc-picker.brue.nu/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="cc-picker">
+<meta property="og:description" content="Every project gets its own drawer. Pick a folder – Claude Code starts right inside it.">
+<meta property="og:image" content="https://cc-picker.brue.nu/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#e6edef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f171a" media="(prefers-color-scheme: dark)">
+<!-- Fonts are self-hosted: no requests to Google or any other third party -->
+<link rel="preload" href="assets/fonts/bricolage-grotesque-variable-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/atkinson-hyperlegible-normal-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<style>
+/* cc-picker website — "filing cabinet". Light + dark via system setting. */
+:root {
+  --bg: #e6edef;
+  --surface: #f8fbfb;
+  --ink: #16252a;
+  --muted: #4d6066;
+  --line: #c6d4d7;
+  --accent: #b44a26;     /* brand terracotta, deepened to ≥4.5:1 on --bg */
+  --accent-ink: #ffffff;
+  --f1: #f4b63f; --f2: #5fbf9c; --f3: #8aaef0; --f4: #ef8a6c;   /* folder colours */
+  --folder-ink: #16252a;
+  --drawer: #cfdadd;
+  --drawer-edge: #b3c3c7;
+  --code-bg: #16252a;
+  --code-ink: #e4eef0;
+  --code-ok: #7fd8ae;
+  --code-dim: #8fa4aa;
+  --shadow: 0 18px 40px -22px #16252a66;
+  --display: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f171a; --surface: #162226; --ink: #e4eef0; --muted: #9db0b6; --line: #2a3a3f;
+    --accent: #f08a64; --accent-ink: #1a1210;
+    --f1: #d9a23a; --f2: #4fa888; --f3: #7394d6; --f4: #d9785c;
+    --drawer: #1c2a2f; --drawer-edge: #2c3e44; --code-bg: #0a1113;
+    --shadow: 0 18px 40px -20px #000c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f171a; --surface: #162226; --ink: #e4eef0; --muted: #9db0b6; --line: #2a3a3f;
+  --accent: #f08a64; --accent-ink: #1a1210;
+  --f1: #d9a23a; --f2: #4fa888; --f3: #7394d6; --f4: #d9785c;
+  --drawer: #1c2a2f; --drawer-edge: #2c3e44; --code-bg: #0a1113;
+  --shadow: 0 18px 40px -20px #000c;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 18px/1.6 var(--body);
+  padding-inline: clamp(16px, 4vw, 40px);
+}
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--surface); border: 1px solid var(--line); padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+.wrap { max-width: 1100px; margin-inline: auto; }
+.skip { position: absolute; left: -9999px; top: 12px; background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* level switch: plain vs technical copy */
+body[data-level="plain"] .tech { display: none; }
+body[data-level="tech"] .plain { display: none; }
+
+/* header */
+.top { display: flex; align-items: center; gap: 12px 28px; flex-wrap: wrap; padding-block: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; font: 800 22px/1 var(--display); letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
+.brand svg { width: 36px; height: 36px; }
+.nav { display: flex; gap: 22px; margin-right: auto; }
+.nav a { color: var(--muted); text-decoration: none; font: 700 15px/1 var(--display); }
+.nav a:hover { color: var(--ink); }
+@media (max-width: 760px) { .nav { display: none; } .brand { margin-right: auto; } }
+.switches { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.seg button {
+  all: unset; cursor: pointer; padding: 7px 14px; border-radius: 999px;
+  font: 700 14px/1 var(--display); color: var(--muted);
+}
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.seg-label { font-size: 14px; color: var(--muted); }
+
+/* hero */
+.hero {
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 72px);
+  align-items: center; padding-block: 36px 64px;
+}
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-top: 16px; } }
+.eyebrow { font: 700 13px/1.3 var(--mono); letter-spacing: 0.04em; color: var(--muted); margin: 0 0 14px; }
+h1 {
+  font: 800 clamp(40px, 6.2vw, 74px)/0.98 var(--display);
+  letter-spacing: -0.035em; margin: 0 0 22px; text-wrap: balance; hyphens: manual;
+}
+h1 .hl { background: linear-gradient(transparent 62%, var(--f1) 62% 92%, transparent 92%); padding-inline: 4px; }
+.lede { font-size: 20px; max-width: 38ch; margin: 0 0 28px; }
+.lede.tech { font-size: 18px; color: var(--muted); }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  font: 700 16px/1 var(--display); padding: 15px 22px; border-radius: 12px; text-decoration: none;
+  background: var(--accent); color: var(--accent-ink); border: 2px solid var(--accent);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--accent) 55%, #000);
+  transition: transform .12s, box-shadow .12s;
+}
+.btn:hover { transform: translateY(1px); box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 55%, #000); }
+.btn.alt { background: transparent; color: var(--ink); border-color: var(--line); box-shadow: none; }
+
+/* drawer with folders */
+.drawer {
+  background: var(--drawer); border: 2px solid var(--drawer-edge); border-radius: 18px;
+  padding: 26px 22px 0; box-shadow: var(--shadow); overflow: hidden;
+}
+.folders { display: grid; }
+.folder {
+  all: unset; cursor: pointer; display: block; position: relative;
+  margin-top: -58px; height: 124px; border-radius: 4px 12px 0 0;
+  background: var(--c); transition: transform .25s cubic-bezier(.3,1.4,.5,1), filter .2s;
+}
+.folder:first-child { margin-top: 26px; }
+.folder::before {
+  content: ""; position: absolute; top: -24px; left: var(--x); width: 150px; height: 26px;
+  background: var(--c); border-radius: 10px 10px 0 0;
+}
+.folder .tab { position: absolute; top: -20px; left: calc(var(--x) + 14px); z-index: 1; font: 700 14px/1.2 var(--display); color: var(--folder-ink); white-space: nowrap; }
+.folder .when { position: absolute; top: 14px; right: 16px; font: 500 12px/1 var(--mono); color: color-mix(in srgb, var(--folder-ink) 80%, transparent); }
+.folder:hover, .folder:focus-visible { transform: translateY(-12px); outline: none; }
+.folder:focus-visible .tab { text-decoration: underline; text-decoration-thickness: 2px; }
+.folder[aria-pressed="true"] { transform: translateY(-44px); }
+.folders.has-pick .folder[aria-pressed="false"] { filter: saturate(.4) brightness(.92); }
+@media (max-width: 520px) {
+  .folder::before { width: 116px; }
+  .folder .tab { font-size: 12.5px; left: calc(var(--x) + 10px); }
+  .folder .when { font-size: 11px; right: 10px; }
+}
+.drawer-front { margin: 0 -22px; height: 60px; background: var(--drawer); border-top: 2px solid var(--drawer-edge); display: grid; place-items: center; }
+.drawer-front span { width: 110px; height: 16px; border-radius: 999px; background: var(--drawer-edge); }
+.ticket {
+  margin-top: 16px; background: var(--code-bg); color: var(--code-ink); border-radius: 12px;
+  padding: 14px 18px; font: 14px/1.6 var(--mono); min-height: 80px; overflow-x: auto;
+}
+.ticket p { margin: 0; white-space: pre; }
+.ok { color: var(--code-ok); }
+.dim { color: var(--code-dim); }
+
+/* sections */
+section.band { padding-block: 56px; border-top: 2px dashed var(--line); scroll-margin-top: 12px; }
+h2 { font: 800 clamp(28px, 3.6vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+.sub { color: var(--muted); max-width: 62ch; margin: 0 0 32px; }
+
+/* before / after */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 820px) { .compare { grid-template-columns: 1fr; } }
+.side { border-radius: 16px; padding: 22px 24px; border: 1px solid var(--line); background: var(--surface); }
+.side.with { border: 2px solid var(--accent); }
+.side h3 { font: 800 20px/1.2 var(--display); margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
+.side h3 .mark { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; font-size: 16px; background: var(--line); color: var(--ink); }
+.side.with h3 .mark { background: var(--accent); color: var(--accent-ink); }
+.side ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.side ol li::marker { font: 700 16px var(--display); color: var(--muted); }
+.side.without ol li:last-child { color: var(--muted); }
+.side pre { margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 14px 16px; font: 14px/1.7 var(--mono); overflow-x: auto; }
+
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+@media (max-width: 820px) { .trio { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px 22px 24px; }
+.card h3 { font: 800 22px/1.2 var(--display); margin: 14px 0 8px; }
+.card p { margin: 0; }
+.sticker { display: inline-grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; background: var(--c); color: var(--folder-ink); font: 800 22px/1 var(--display); transform: rotate(-4deg); }
+
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+@media (max-width: 820px) { .modes { grid-template-columns: 1fr; } }
+.shot { display: block; width: 100%; max-width: 460px; height: auto; border-radius: 14px; box-shadow: var(--shadow); margin-inline: auto; }
+.mock-term { background: var(--code-bg); color: var(--code-ink); border-radius: 14px; box-shadow: var(--shadow); }
+.mock-term pre { margin: 0; padding: 18px 20px; font: 14px/1.7 var(--mono); overflow-x: auto; }
+.mode-cap { margin: 14px 4px 0; max-width: 46ch; }
+.mode-cap b { font-family: var(--display); }
+
+.needs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 26px; padding: 0; list-style: none; }
+.needs li { font: 700 14px/1 var(--display); padding: 9px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.needs li.label { background: none; border: 0; padding-left: 0; color: var(--muted); font-weight: 500; }
+.needs li.opt { color: var(--muted); border-style: dashed; }
+.install { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 32px; align-items: start; }
+@media (max-width: 860px) { .install { grid-template-columns: 1fr; } }
+.cmd { display: flex; align-items: center; gap: 12px; background: var(--code-bg); color: var(--code-ink); border-radius: 12px; padding: 10px 10px 10px 18px; font: 15px/1.5 var(--mono); margin-bottom: 10px; }
+.cmd code { all: unset; flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; }
+.cmd code::before { content: "$ "; color: var(--code-ok); }
+.copy { all: unset; cursor: pointer; flex: none; font: 700 13px/1 var(--display); padding: 9px 12px; border-radius: 8px; background: #ffffff1f; color: var(--code-ink); }
+.copy:focus-visible { outline: 2px solid var(--f1); }
+.checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.checklist li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; }
+.checklist li::before { content: "✓"; font-weight: 700; color: var(--accent); }
+
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; }
+details + details { margin-top: 10px; }
+summary { cursor: pointer; font: 700 19px/1.3 var(--display); }
+details p { margin: 10px 0 0; max-width: 68ch; }
+
+footer { padding-block: 40px 56px; border-top: 2px dashed var(--line); color: var(--muted); font-size: 15px; display: grid; gap: 10px; }
+footer p { max-width: 78ch; margin: 0; }
+footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .folder, .btn { transition: none; }
+}
+</style>
+</head>
+<body data-level="plain">
+<a class="skip" href="#main" data-t="skip">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#top" id="top" aria-label="cc-picker">
+      <svg viewBox="0 0 256 256" aria-hidden="true">
+        <defs><linearGradient id="gb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e08a6b"/><stop offset="1" stop-color="#c15f3c"/></linearGradient></defs>
+        <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#gb)"/>
+        <path d="M110 98 a38 38 0 1 0 0 60" fill="none" stroke="#f4f3ee" stroke-width="18" stroke-linecap="round"/>
+        <path d="M178 98 a38 38 0 1 0 0 60" fill="none" stroke="#f4f3ee" stroke-width="18" stroke-linecap="round"/>
+        <line x1="176" y1="190" x2="206" y2="190" stroke="#2b2a27" stroke-width="14" stroke-linecap="round"/>
+      </svg>
+      cc-picker
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#why" data-t="navWhy">Why</a>
+      <a href="#how" data-t="navHow">How it works</a>
+      <a href="#install" data-t="navInstall">Install</a>
+      <a href="#faq" data-t="navFaq">FAQ</a>
+    </nav>
+    <div class="switches">
+      <span class="seg-label" data-t="explain">Explain it</span>
+      <div class="seg" role="group" aria-label="Level of detail" data-t-aria="levelAria">
+        <button id="lvPlain" type="button" aria-pressed="true" data-level="plain" data-t="plainBtn">Plain</button>
+        <button id="lvTech" type="button" aria-pressed="false" data-level="tech" data-t="techBtn">Technical</button>
+      </div>
+      <div class="seg" role="group" aria-label="Language">
+        <button id="langEn" type="button" aria-pressed="true" data-lang="en" lang="en">EN</button>
+        <button id="langDe" type="button" aria-pressed="false" data-lang="de" lang="de">DE</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+  <section class="hero">
+    <div>
+      <p class="eyebrow" data-t="eyebrow">A project launcher for Claude Code on Linux</p>
+      <h1 data-t="h1">Every project gets its <span class="hl">own drawer</span>.</h1>
+      <p class="lede plain" data-t="ledeP">Pick a folder from a list, and Claude Code starts right inside it – with that project as its working folder, instead of wherever your terminal happened to be.</p>
+      <p class="lede tech" data-t="ledeT">Lists <code>~/claude-projects</code>, recent first, opens a terminal in the chosen folder and starts <code>claude</code> there. Pure Bash; zenity, kdialog or yad for the window.</p>
+      <div class="cta">
+        <a class="btn" href="#install" data-t="cta1">Install cc-picker</a>
+        <a class="btn alt" href="https://github.com/bruneler/cc-picker" data-t="cta2">View on GitHub</a>
+      </div>
+    </div>
+
+    <div>
+      <div class="drawer">
+        <div class="folders" id="folders" role="group" aria-label="Demo: pick a project" data-t-aria="drawerAria">
+          <button class="folder" type="button" aria-pressed="false" style="--c: var(--f1); --x: 4%"  data-name="notes-app"><span class="tab">notes-app</span><span class="when" data-t="ago5d">5 days ago</span></button>
+          <button class="folder" type="button" aria-pressed="false" style="--c: var(--f2); --x: 30%" data-name="api-server"><span class="tab">api-server</span><span class="when" data-t="agoY">yesterday</span></button>
+          <button class="folder" type="button" aria-pressed="false" style="--c: var(--f3); --x: 56%" data-name="my-webapp"><span class="tab">my-webapp</span><span class="when" data-t="ago2h">2 h ago</span></button>
+          <button class="folder" type="button" aria-pressed="false" style="--c: var(--f4); --x: 18%" data-name="new"><span class="tab" data-t="newTab">+ new project</span></button>
+        </div>
+        <div class="drawer-front" aria-hidden="true"><span></span></div>
+      </div>
+      <div class="ticket" id="ticket" aria-live="polite">
+        <p class="dim" data-t="tick1">← pull out a folder to try it</p>
+        <p class="dim" data-t="tick2">  (demo – nothing is launched)</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="why">
+    <h2 data-t="whyH">Why bother?</h2>
+    <p class="sub plain" data-t="whySubP">Claude Code treats the folder it starts in as your project. Starting it in the right one should take one click.</p>
+    <p class="sub tech" data-t="whySubT">claude operates on its working directory. cc-picker turns that directory into a deliberate choice.</p>
+    <div class="compare">
+      <article class="side without">
+        <h3><span class="mark" aria-hidden="true">✗</span><span data-t="withoutH">Without cc-picker</span></h3>
+        <ol class="plain" data-t="withoutP">
+          <li>Open a terminal</li>
+          <li>Remember where the project lives</li>
+          <li>Type the path to get there</li>
+          <li>Start Claude Code – and hope it's the right folder</li>
+        </ol>
+        <pre class="tech" data-t="withoutT">$ cd ~/code/clients/acme/webapp   # or was it ~/dev?
+$ claude
+# …or forget the cd and start in ~</pre>
+      </article>
+      <article class="side with">
+        <h3><span class="mark" aria-hidden="true">✓</span><span data-t="withH">With cc-picker</span></h3>
+        <ol class="plain" data-t="withP">
+          <li>Click the icon</li>
+          <li>Pick the project – recent ones are on top</li>
+          <li>Claude Code is running in the right folder</li>
+        </ol>
+        <pre class="tech" data-t="withT">$ cc-picker
+# pick → terminal opens in ~/claude-projects/&lt;name&gt;
+#      → exec claude</pre>
+      </article>
+    </div>
+  </section>
+
+  <section class="band" id="how">
+    <h2 data-t="doesH">What it does</h2>
+    <p class="sub plain" data-t="doesSubP">Three things, done well.</p>
+    <p class="sub tech" data-t="doesSubT">One Bash script. No background service, no network code, no dependencies beyond a dialog tool and a terminal.</p>
+    <div class="trio">
+      <article class="card">
+        <span class="sticker" style="--c: var(--f3)" aria-hidden="true">↑</span>
+        <h3 data-t="pickH">Pick</h3>
+        <p class="plain" data-t="pickP">A list of your projects. The ones you used lately sit on top, with “2 h ago” or “yesterday” next to them.</p>
+        <p class="tech" data-t="pickT">Recent list in <code>~/.local/state/cc-picker/recent</code> (max. 50). Deleted folders are skipped, hidden ones aren't listed.</p>
+      </article>
+      <article class="card">
+        <span class="sticker" style="--c: var(--f4)" aria-hidden="true">+</span>
+        <h3 data-t="createH">…or create</h3>
+        <p class="plain" data-t="createP">Starting fresh? Type a name. Code already online? Paste its address and it's downloaded for you.</p>
+        <p class="tech" data-t="createT">Name validation (no <code>/</code>, no leading <code>.</code>/<code>-</code>). Optional <code>git clone</code> with a progress dialog; failures show git's reason and leave no empty folder.</p>
+      </article>
+      <article class="card">
+        <span class="sticker" style="--c: var(--f2)" aria-hidden="true">▶</span>
+        <h3 data-t="startH">Start</h3>
+        <p class="plain" data-t="startP">A terminal opens in that folder with Claude Code already running. Quit Claude, and you're still in the right place.</p>
+        <p class="tech" data-t="startT">Commands are <code>%q</code>-quoted; works with gnome-terminal, konsole, xfce4-terminal, alacritty, kitty and xterm.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="band">
+    <h2 data-t="waysH">Two ways to choose</h2>
+    <p class="sub plain" data-t="waysSubP">Click through a window, or type a number – whatever feels natural.</p>
+    <p class="sub tech" data-t="waysSubT">The window is the default; <code>--shell-mode</code> or <code>CC_PICKER_MODE=shell</code> for the menu. No dialog tool installed? It falls back to the menu automatically.</p>
+    <div class="modes">
+      <figure style="margin:0">
+        <picture>
+          <source id="shotDark" media="(prefers-color-scheme: dark)" srcset="assets/picker-en-dark.png">
+          <img id="shot" class="shot" src="assets/picker-en-light.png" width="460" height="420" alt="The cc-picker window: a list of projects with a “Last used” column and Start and Cancel buttons">
+        </picture>
+        <figcaption class="mode-cap plain" data-t="winCapP"><b>The window.</b> Opens when you click the icon in your app menu.</figcaption>
+        <figcaption class="mode-cap tech" data-t="winCapT"><b>The window.</b> zenity (GNOME), kdialog (KDE) or yad – whichever is installed. Real screenshot, zenity 4.</figcaption>
+      </figure>
+      <figure style="margin:0">
+        <div class="mock-term">
+<pre data-t="menuMock">$ cc-picker --shell-mode
+cc-picker — choose a project:
+
+1) my-webapp      3) notes-app
+2) api-server     4) + Create new project
+#? 1</pre>
+        </div>
+        <figcaption class="mode-cap plain" data-t="menuCapP"><b>The menu.</b> For people who live in the terminal – or work on another computer over the network.</figcaption>
+        <figcaption class="mode-cap tech" data-t="menuCapT"><b>The menu.</b> Runs in place via <code>select</code>; Ctrl+D quits with exit code 0.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="band" id="install">
+    <h2 data-t="instH">Install it</h2>
+    <ul class="needs">
+      <li class="label" data-t="needs">You need:</li>
+      <li>Linux</li>
+      <li>Bash</li>
+      <li>Claude Code</li>
+      <li class="opt" data-t="needsOpt">a desktop for the window (optional)</li>
+    </ul>
+    <div class="install">
+      <div>
+        <p class="sub plain" data-t="instSubP">Open a terminal, paste these two lines one after the other and press Enter each time. Done.</p>
+        <p class="sub tech" data-t="instSubT">Installs into <code>~/.local</code> – no root needed.</p>
+        <div class="cmd"><code id="c1">git clone https://github.com/bruneler/cc-picker.git</code><button class="copy" type="button" data-copy="c1" data-t="copy">Copy</button></div>
+        <div class="cmd"><code id="c2">cd cc-picker &amp;&amp; ./install.sh</code><button class="copy" type="button" data-copy="c2" data-t="copy">Copy</button></div>
+      </div>
+      <ul class="checklist">
+        <li><span><span class="plain" data-t="ck1P">Adds cc-picker to your app menu, with its own icon</span><span class="tech" data-t="ck1T"><code>~/.local/share/applications/cc-picker.desktop</code> + icon</span></span></li>
+        <li><span><span class="plain" data-t="ck2P">Makes the <code>cc-picker</code> command work in any terminal</span><span class="tech" data-t="ck2T">Adds <code>~/.local/bin</code> to <code>PATH</code> for bash, zsh, fish or <code>~/.profile</code> – once</span></span></li>
+        <li><span><span class="plain" data-t="ck3P">Checks that everything it needs is there</span><span class="tech" data-t="ck3T">claude, a terminal emulator, git, a dialog tool</span></span></li>
+        <li><span><span class="plain" data-t="ck4P">Asks before installing anything extra – and shows exactly what it would run</span><span class="tech" data-t="ck4T">e.g. <code>sudo pacman -S --needed zenity</code>, only after confirmation</span></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band" id="faq">
+    <h2 data-t="faqH">Good to know</h2>
+    <details>
+      <summary data-t="q1">Is this made by Anthropic?</summary>
+      <p data-t="a1">No. cc-picker is an independent community project. It simply starts the official <code>claude</code> program in a folder you choose.</p>
+    </details>
+    <details>
+      <summary data-t="q2">Does it send anything anywhere?</summary>
+      <p data-t="a2">No. Settings and the list of recent projects are two small files on your own computer. cc-picker has no network code – only <code>git clone</code> goes online, and only when you ask it to.</p>
+    </details>
+    <details>
+      <summary data-t="q7">Does this keep Claude Code away from my other files?</summary>
+      <p data-t="a7">No – and that's worth knowing. The start folder is where Claude Code works by default, not a security boundary: depending on its permissions it can still read, change or run things elsewhere. What Claude Code may do is set by its own permission settings, and cc-picker doesn't change them.</p>
+    </details>
+    <details>
+      <summary data-t="q3">Do I need to know my way around the terminal?</summary>
+      <p data-t="a3">Only for the two install lines. After that, cc-picker lives in your app menu and works with clicks.</p>
+    </details>
+    <details>
+      <summary data-t="q4">Where do my projects live?</summary>
+      <p data-t="a4">In <code>~/claude-projects</code> by default. To use another folder, write <code>CC_PICKER_BASE=~/somewhere/else</code> into <code>~/.config/cc-picker/config</code>.</p>
+    </details>
+    <details>
+      <summary data-t="q5">Mac or Windows?</summary>
+      <p data-t="a5">Not at the moment – cc-picker is made for Linux with Bash. It's tested on GNOME; KDE and other desktops work through kdialog or yad.</p>
+    </details>
+    <details>
+      <summary data-t="q6">How do I remove it?</summary>
+      <p data-t="a6">Delete three files: <code>rm ~/.local/bin/cc-picker ~/.local/share/applications/cc-picker.desktop ~/.local/share/icons/cc-picker.svg</code>. Your projects stay where they are.</p>
+    </details>
+  </section>
+  </main>
+
+  <footer>
+    <nav aria-label="Links">
+      <span>cc-picker 0.2.0</span>
+      <a href="https://github.com/bruneler/cc-picker">GitHub</a>
+      <a href="https://github.com/bruneler/cc-picker/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/bruneler/cc-picker/blob/main/LICENSE" data-t="license">MIT license</a>
+    </nav>
+    <p data-t="disclaimer">cc-picker is an independent community project and is not affiliated with or endorsed by Anthropic. “Claude” is a trademark of Anthropic, PBC. This tool simply launches the official <code>claude</code> command-line tool in a folder of your choice.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  // All translatable text. Plain strings are used as-is (innerHTML);
+  // the HTML above holds the English version for first paint and no-JS.
+  const T = {
+    skip:      { en: "Skip to content", de: "Zum Inhalt springen" },
+    navWhy:    { en: "Why", de: "Wozu" },
+    navHow:    { en: "How it works", de: "So geht's" },
+    navInstall:{ en: "Install", de: "Installieren" },
+    navFaq:    { en: "FAQ", de: "FAQ" },
+    explain:   { en: "Explain it", de: "Erklärung" },
+    plainBtn:  { en: "Plain", de: "Einfach" },
+    techBtn:   { en: "Technical", de: "Technisch" },
+    eyebrow:   { en: "A project launcher for Claude Code on Linux", de: "Ein Projekt-Starter für Claude Code unter Linux" },
+    h1:        { en: 'Every project gets its <span class="hl">own drawer</span>.',
+                 de: 'Jedes Projekt bekommt seine <span class="hl">eigene Schublade</span>.' },
+    ledeP:     { en: "Pick a folder from a list, and Claude Code starts right inside it – with that project as its working folder, instead of wherever your terminal happened to be.",
+                 de: "Such dir einen Ordner aus der Liste aus – Claude Code startet direkt darin, mit diesem Projekt als Arbeitsordner, statt dort, wo dein Terminal gerade zufällig war." },
+    ledeT:     { en: "Lists <code>~/claude-projects</code>, recent first, opens a terminal in the chosen folder and starts <code>claude</code> there. Pure Bash; zenity, kdialog or yad for the window.",
+                 de: "Listet <code>~/claude-projects</code> auf, zuletzt benutzte zuerst, öffnet ein Terminal im gewählten Ordner und startet dort <code>claude</code>. Reines Bash; zenity, kdialog oder yad fürs Fenster." },
+    cta1:      { en: "Install cc-picker", de: "cc-picker installieren" },
+    cta2:      { en: "View on GitHub", de: "Auf GitHub ansehen" },
+    ago5d:     { en: "5 days ago", de: "vor 5 Tagen" },
+    agoY:      { en: "yesterday", de: "gestern" },
+    ago2h:     { en: "2 h ago", de: "vor 2 Std." },
+    newTab:    { en: "+ new project", de: "+ neues Projekt" },
+    tick1:     { en: "← pull out a folder to try it", de: "← zieh einen Ordner heraus" },
+    tick2:     { en: "  (demo – nothing is launched)", de: "  (Demo – es wird nichts gestartet)" },
+    whyH:      { en: "Why bother?", de: "Wozu das Ganze?" },
+    whySubP:   { en: "Claude Code treats the folder it starts in as your project. Starting it in the right one should take one click.",
+                 de: "Claude Code behandelt den Ordner, in dem es startet, als dein Projekt. Der richtige sollte nur einen Klick entfernt sein." },
+    whySubT:   { en: "claude operates on its working directory. cc-picker turns that directory into a deliberate choice.",
+                 de: "claude arbeitet im aktuellen Arbeitsverzeichnis. cc-picker macht dieses Verzeichnis zur bewussten Wahl." },
+    withoutH:  { en: "Without cc-picker", de: "Ohne cc-picker" },
+    withoutP:  { en: "<li>Open a terminal</li><li>Remember where the project lives</li><li>Type the path to get there</li><li>Start Claude Code – and hope it's the right folder</li>",
+                 de: "<li>Terminal öffnen</li><li>Überlegen, wo das Projekt liegt</li><li>Den Pfad dorthin eintippen</li><li>Claude Code starten – und hoffen, dass es der richtige Ordner ist</li>" },
+    withoutT:  { en: "$ cd ~/code/clients/acme/webapp   # or was it ~/dev?\n$ claude\n# …or forget the cd and start in ~",
+                 de: "$ cd ~/code/kunden/acme/webapp   # oder war's ~/dev?\n$ claude\n# …oder das cd vergessen und in ~ starten" },
+    withH:     { en: "With cc-picker", de: "Mit cc-picker" },
+    withP:     { en: "<li>Click the icon</li><li>Pick the project – recent ones are on top</li><li>Claude Code is running in the right folder</li>",
+                 de: "<li>Aufs Icon klicken</li><li>Projekt wählen – zuletzt benutzte stehen oben</li><li>Claude Code läuft im richtigen Ordner</li>" },
+    withT:     { en: "$ cc-picker\n# pick → terminal opens in ~/claude-projects/&lt;name&gt;\n#      → exec claude",
+                 de: "$ cc-picker\n# wählen → Terminal öffnet in ~/claude-projects/&lt;name&gt;\n#        → exec claude" },
+    doesH:     { en: "What it does", de: "Was es macht" },
+    doesSubP:  { en: "Three things, done well.", de: "Drei Dinge – und die richtig." },
+    doesSubT:  { en: "One Bash script. No background service, no network code, no dependencies beyond a dialog tool and a terminal.",
+                 de: "Ein Bash-Skript. Kein Hintergrunddienst, kein Netzwerkcode, keine Abhängigkeiten außer einem Dialog-Programm und einem Terminal." },
+    pickH:     { en: "Pick", de: "Wählen" },
+    pickP:     { en: "A list of your projects. The ones you used lately sit on top, with “2 h ago” or “yesterday” next to them.",
+                 de: "Eine Liste deiner Projekte. Die zuletzt benutzten stehen oben, mit „vor 2 Std.“ oder „gestern“ daneben." },
+    pickT:     { en: "Recent list in <code>~/.local/state/cc-picker/recent</code> (max. 50). Deleted folders are skipped, hidden ones aren't listed.",
+                 de: "Verlauf in <code>~/.local/state/cc-picker/recent</code> (max. 50). Gelöschte Ordner werden übersprungen, versteckte nicht angezeigt." },
+    createH:   { en: "…or create", de: "…oder neu anlegen" },
+    createP:   { en: "Starting fresh? Type a name. Code already online? Paste its address and it's downloaded for you.",
+                 de: "Neu anfangen? Namen eintippen. Liegt der Code schon online? Adresse einfügen – er wird für dich heruntergeladen." },
+    createT:   { en: "Name validation (no <code>/</code>, no leading <code>.</code>/<code>-</code>). Optional <code>git clone</code> with a progress dialog; failures show git's reason and leave no empty folder.",
+                 de: "Namensprüfung (kein <code>/</code>, kein führender <code>.</code>/<code>-</code>). Optional <code>git clone</code> mit Fortschrittsanzeige; bei Fehlern steht der Grund von git da, und es bleibt kein leerer Ordner zurück." },
+    startH:    { en: "Start", de: "Starten" },
+    startP:    { en: "A terminal opens in that folder with Claude Code already running. Quit Claude, and you're still in the right place.",
+                 de: "Ein Terminal öffnet sich in diesem Ordner, Claude Code läuft schon. Beendest du Claude, bist du immer noch am richtigen Ort." },
+    startT:    { en: "Commands are <code>%q</code>-quoted; works with gnome-terminal, konsole, xfce4-terminal, alacritty, kitty and xterm.",
+                 de: "Befehle werden mit <code>%q</code> maskiert; läuft mit gnome-terminal, konsole, xfce4-terminal, alacritty, kitty und xterm." },
+    waysH:     { en: "Two ways to choose", de: "Zwei Wege zur Auswahl" },
+    waysSubP:  { en: "Click through a window, or type a number – whatever feels natural.",
+                 de: "Im Fenster klicken oder eine Zahl tippen – wie es dir lieber ist." },
+    waysSubT:  { en: "The window is the default; <code>--shell-mode</code> or <code>CC_PICKER_MODE=shell</code> for the menu. No dialog tool installed? It falls back to the menu automatically.",
+                 de: "Standard ist das Fenster; <code>--shell-mode</code> oder <code>CC_PICKER_MODE=shell</code> für das Menü. Ohne Dialog-Programm wird automatisch das Menü genutzt." },
+    winCapP:   { en: "<b>The window.</b> Opens when you click the icon in your app menu.",
+                 de: "<b>Das Fenster.</b> Erscheint, wenn du im Anwendungsmenü aufs Icon klickst." },
+    winCapT:   { en: "<b>The window.</b> zenity (GNOME), kdialog (KDE) or yad – whichever is installed. Real screenshot, zenity 4.",
+                 de: "<b>Das Fenster.</b> zenity (GNOME), kdialog (KDE) oder yad – je nachdem, was installiert ist. Echter Screenshot, zenity 4." },
+    menuMock:  { en: "$ cc-picker --shell-mode\ncc-picker — choose a project:\n\n1) my-webapp      3) notes-app\n2) api-server     4) + Create new project\n#? 1",
+                 de: "$ cc-picker --shell-mode\ncc-picker — Projekt wählen:\n\n1) my-webapp      3) notes-app\n2) api-server     4) + Neues Projekt erstellen\n#? 1" },
+    menuCapP:  { en: "<b>The menu.</b> For people who live in the terminal – or work on another computer over the network.",
+                 de: "<b>Das Menü.</b> Für alle, die gern im Terminal arbeiten – oder per Netzwerk an einem anderen Rechner." },
+    menuCapT:  { en: "<b>The menu.</b> Runs in place via <code>select</code>; Ctrl+D quits with exit code 0.",
+                 de: "<b>Das Menü.</b> Läuft direkt im Terminal über <code>select</code>; Strg+D beendet mit Exit-Code 0." },
+    instH:     { en: "Install it", de: "Installieren" },
+    needs:     { en: "You need:", de: "Du brauchst:" },
+    needsOpt:  { en: "a desktop for the window (optional)", de: "einen Desktop fürs Fenster (optional)" },
+    instSubP:  { en: "Open a terminal, paste these two lines one after the other and press Enter each time. Done.",
+                 de: "Öffne ein Terminal, füge die beiden Zeilen nacheinander ein und drück jeweils Enter. Fertig." },
+    instSubT:  { en: "Installs into <code>~/.local</code> – no root needed.", de: "Installiert nach <code>~/.local</code> – ganz ohne root." },
+    copy:      { en: "Copy", de: "Kopieren" },
+    ck1P:      { en: "Adds cc-picker to your app menu, with its own icon", de: "Legt cc-picker mit eigenem Icon ins Anwendungsmenü" },
+    ck1T:      { en: "<code>~/.local/share/applications/cc-picker.desktop</code> + icon", de: "<code>~/.local/share/applications/cc-picker.desktop</code> + Icon" },
+    ck2P:      { en: "Makes the <code>cc-picker</code> command work in any terminal", de: "Sorgt dafür, dass der Befehl <code>cc-picker</code> in jedem Terminal klappt" },
+    ck2T:      { en: "Adds <code>~/.local/bin</code> to <code>PATH</code> for bash, zsh, fish or <code>~/.profile</code> – once",
+                 de: "Ergänzt <code>~/.local/bin</code> im <code>PATH</code> für bash, zsh, fish oder <code>~/.profile</code> – einmalig" },
+    ck3P:      { en: "Checks that everything it needs is there", de: "Prüft, ob alles Nötige da ist" },
+    ck3T:      { en: "claude, a terminal emulator, git, a dialog tool", de: "claude, Terminal-Emulator, git, Dialog-Programm" },
+    ck4P:      { en: "Asks before installing anything extra – and shows exactly what it would run",
+                 de: "Fragt, bevor es etwas nachinstalliert – und zeigt genau, was es ausführen würde" },
+    ck4T:      { en: "e.g. <code>sudo pacman -S --needed zenity</code>, only after confirmation",
+                 de: "z. B. <code>sudo pacman -S --needed zenity</code>, nur nach Bestätigung" },
+    faqH:      { en: "Good to know", de: "Gut zu wissen" },
+    q1:        { en: "Is this made by Anthropic?", de: "Ist das von Anthropic?" },
+    a1:        { en: "No. cc-picker is an independent community project. It simply starts the official <code>claude</code> program in a folder you choose.",
+                 de: "Nein. cc-picker ist ein unabhängiges Community-Projekt. Es startet einfach das offizielle Programm <code>claude</code> in einem Ordner deiner Wahl." },
+    q2:        { en: "Does it send anything anywhere?", de: "Schickt es irgendetwas irgendwohin?" },
+    a2:        { en: "No. Settings and the list of recent projects are two small files on your own computer. cc-picker has no network code – only <code>git clone</code> goes online, and only when you ask it to.",
+                 de: "Nein. Einstellungen und die Liste der zuletzt benutzten Projekte sind zwei kleine Dateien auf deinem eigenen Rechner. cc-picker hat keinen Netzwerkcode – nur <code>git clone</code> geht ins Internet, und nur, wenn du es willst." },
+    q7:        { en: "Does this keep Claude Code away from my other files?", de: "Hält das Claude Code von meinen anderen Dateien fern?" },
+    a7:        { en: "No – and that's worth knowing. The start folder is where Claude Code works by default, not a security boundary: depending on its permissions it can still read, change or run things elsewhere. What Claude Code may do is set by its own permission settings, and cc-picker doesn't change them.",
+                 de: "Nein – und das ist wichtig zu wissen. Der Startordner ist der Ordner, in dem Claude Code standardmäßig arbeitet, aber keine Sicherheitsgrenze: Je nach Berechtigungen kann es auch anderswo lesen, ändern oder Befehle ausführen. Was Claude Code darf, legen seine eigenen Berechtigungseinstellungen fest – daran ändert cc-picker nichts." },
+    q3:        { en: "Do I need to know my way around the terminal?", de: "Muss ich mich mit dem Terminal auskennen?" },
+    a3:        { en: "Only for the two install lines. After that, cc-picker lives in your app menu and works with clicks.",
+                 de: "Nur für die zwei Zeilen bei der Installation. Danach liegt cc-picker im Anwendungsmenü und funktioniert per Klick." },
+    q4:        { en: "Where do my projects live?", de: "Wo liegen meine Projekte?" },
+    a4:        { en: "In <code>~/claude-projects</code> by default. To use another folder, write <code>CC_PICKER_BASE=~/somewhere/else</code> into <code>~/.config/cc-picker/config</code>.",
+                 de: "Standardmäßig in <code>~/claude-projects</code>. Für einen anderen Ordner schreib <code>CC_PICKER_BASE=~/irgendwo/anders</code> in <code>~/.config/cc-picker/config</code>." },
+    q5:        { en: "Mac or Windows?", de: "Mac oder Windows?" },
+    a5:        { en: "Not at the moment – cc-picker is made for Linux with Bash. It's tested on GNOME; KDE and other desktops work through kdialog or yad.",
+                 de: "Im Moment nicht – cc-picker ist für Linux mit Bash gemacht. Getestet unter GNOME; KDE und andere Desktops funktionieren über kdialog oder yad." },
+    q6:        { en: "How do I remove it?", de: "Wie werde ich es wieder los?" },
+    a6:        { en: "Delete three files: <code>rm ~/.local/bin/cc-picker ~/.local/share/applications/cc-picker.desktop ~/.local/share/icons/cc-picker.svg</code>. Your projects stay where they are.",
+                 de: "Drei Dateien löschen: <code>rm ~/.local/bin/cc-picker ~/.local/share/applications/cc-picker.desktop ~/.local/share/icons/cc-picker.svg</code>. Deine Projekte bleiben, wo sie sind." },
+    license:   { en: "MIT license", de: "MIT-Lizenz" },
+    disclaimer:{ en: "cc-picker is an independent community project and is not affiliated with or endorsed by Anthropic. “Claude” is a trademark of Anthropic, PBC. This tool simply launches the official <code>claude</code> command-line tool in a folder of your choice.",
+                 de: "cc-picker ist ein unabhängiges Community-Projekt und nicht mit Anthropic verbunden oder von Anthropic autorisiert. „Claude“ ist eine Marke von Anthropic, PBC. Dieses Tool startet lediglich die offizielle <code>claude</code>-Kommandozeile in einem von dir gewählten Ordner." },
+  };
+  const ARIA = {
+    levelAria:  { en: "Level of detail", de: "Detailgrad" },
+    drawerAria: { en: "Demo: pick a project", de: "Demo: Projekt wählen" },
+  };
+  const DEMO = {
+    en: { created: n => `+ created ~/claude-projects/${n}`, opens: n => `→ terminal opens in ~/claude-projects/${n}`, running: n => `Claude Code is running in ${n}`,
+          copied: "Copied", select: "Select it", title: "cc-picker",
+          shotAlt: "The cc-picker window: a list of projects with a “Last used” column and Start and Cancel buttons" },
+    de: { created: n => `+ angelegt: ~/claude-projects/${n}`, opens: n => `→ Terminal öffnet sich in ~/claude-projects/${n}`, running: n => `Claude Code läuft in ${n}`,
+          copied: "Kopiert", select: "Bitte markieren", title: "cc-picker",
+          shotAlt: "Das cc-picker-Fenster: eine Projektliste mit Spalte „Zuletzt“ und den Buttons Starten und Abbrechen" },
+  };
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+  let lang = store.get("cc-lang") || ((navigator.language || "en").toLowerCase().startsWith("de") ? "de" : "en");
+  let lastPick = null;
+
+  function applyLang(l) {
+    lang = l;
+    document.documentElement.lang = l;
+    document.querySelectorAll("[data-t]").forEach(el => {
+      const e = T[el.dataset.t]; if (e) el.innerHTML = e[l];
+    });
+    document.querySelectorAll("[data-t-aria]").forEach(el => {
+      const e = ARIA[el.dataset.tAria]; if (e) el.setAttribute("aria-label", e[l]);
+    });
+    document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === l)));
+    document.getElementById("shot").src = `assets/picker-${l}-light.png`;
+    document.getElementById("shot").alt = DEMO[l].shotAlt;
+    document.getElementById("shotDark").srcset = `assets/picker-${l}-dark.png`;
+    document.querySelectorAll("#folders .folder").forEach(f => {
+      const tab = f.querySelector(".tab").textContent;
+      f.setAttribute("aria-label", l === "de" ? (f.dataset.name === "new" ? "Neues Projekt anlegen" : `${tab} öffnen`)
+                                              : (f.dataset.name === "new" ? "Create a new project" : `Open ${tab}`));
+    });
+    if (lastPick) showTicket(lastPick);
+    store.set("cc-lang", l);
+  }
+  document.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+
+  // plain / technical
+  const levelButtons = document.querySelectorAll("[data-level]");
+  function applyLevel(v) {
+    document.body.dataset.level = v;
+    levelButtons.forEach(x => x.setAttribute("aria-pressed", String(x.dataset.level === v)));
+    store.set("cc-level", v);
+  }
+  levelButtons.forEach(b => b.addEventListener("click", () => applyLevel(b.dataset.level)));
+
+  // folder demo
+  const folders = document.getElementById("folders");
+  const ticket = document.getElementById("ticket");
+  function showTicket(key) {
+    const d = DEMO[lang];
+    const name = key === "new" ? "weekend-hack" : key;
+    ticket.innerHTML = (key === "new" ? `<p class="dim">${d.created(name)}</p>` : "") +
+      `<p class="dim">${d.opens(name)}</p><p><span class="ok">✓</span> ${d.running(name)}</p>`;
+  }
+  folders.addEventListener("click", (e) => {
+    const f = e.target.closest(".folder"); if (!f) return;
+    folders.querySelectorAll(".folder").forEach(x => x.setAttribute("aria-pressed", String(x === f)));
+    folders.classList.add("has-pick");
+    lastPick = f.dataset.name;
+    showTicket(lastPick);
+  });
+
+  // copy buttons
+  document.querySelectorAll(".copy").forEach(b => b.addEventListener("click", async () => {
+    const text = document.getElementById(b.dataset.copy).textContent;
+    try { await navigator.clipboard.writeText(text); b.textContent = DEMO[lang].copied; }
+    catch { b.textContent = DEMO[lang].select; }
+    setTimeout(() => { b.textContent = T.copy[lang]; }, 1600);
+  }));
+
+  applyLevel(store.get("cc-level") === "tech" ? "tech" : "plain");
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>
