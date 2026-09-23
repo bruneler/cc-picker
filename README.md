@@ -85,12 +85,19 @@ Das Skript installiert:
 | `~/.local/share/applications/cc-picker.desktop` | Eintrag im Anwendungsmenü |
 | `~/.local/share/icons/cc-picker.svg` | App-Icon |
 
-Falls `~/.local/bin` noch nicht in deinem `PATH` ist, in `~/.bashrc` bzw.
-`~/.zshrc` eintragen:
+**PATH wird automatisch eingerichtet:** Ist `~/.local/bin` noch nicht im
+`PATH`, erkennt `install.sh` deine Login-Shell und ergänzt die passende
+Zeile – nur einmal, auch bei mehrfacher Installation:
 
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
+| Shell | Datei | Eintrag |
+|---|---|---|
+| bash | `~/.bashrc` | `export PATH="$HOME/.local/bin:$PATH"` |
+| zsh | `~/.zshrc` | `export PATH="$HOME/.local/bin:$PATH"` |
+| fish | `~/.config/fish/config.fish` | `fish_add_path "$HOME/.local/bin"` |
+| andere | `~/.profile` | `export PATH="$HOME/.local/bin:$PATH"` |
+
+Wer das lieber selbst macht: `CC_PICKER_NO_PATH=1 ./install.sh` – dann
+wird die Zeile nur angezeigt, nicht eingetragen.
 
 ## Nutzung
 
@@ -139,7 +146,9 @@ rm ~/.local/bin/cc-picker \
    ~/.local/share/icons/cc-picker.svg
 ```
 
-Deine Projektordner bleiben dabei unberührt.
+Deine Projektordner bleiben dabei unberührt. Einen von `install.sh`
+ergänzten PATH-Eintrag (markiert mit `# added by cc-picker install.sh`)
+kannst du bei Bedarf aus deiner Shell-Config löschen.
 
 ## Mitwirken
 
