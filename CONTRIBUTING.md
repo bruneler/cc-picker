@@ -5,6 +5,7 @@ Thanks for your interest! A few quick notes:
 ## Reporting bugs / suggesting features
 
 Please open an [issue](../../issues) and include:
+- the output of `cc-picker --version`
 - your distro, shell and terminal emulator
 - the output of `bash --version` and of your dialog tool's version
   (`zenity --version`, `kdialog --version` or `yad --version`)
@@ -16,11 +17,13 @@ Issues in English or German are both fine.
 
 1. Fork the repo and branch off `main`
 2. Keep changes as small and focused as possible
-3. Check the scripts for syntax errors with `bash -n cc-picker.sh install.sh`
-   and test manually
+3. Run `bash -n cc-picker.sh install.sh` and
+   [ShellCheck](https://www.shellcheck.net/) (`shellcheck cc-picker.sh install.sh`),
+   then test manually. CI runs the same checks on every push.
 4. Don't introduce hard-coded paths or user names – anything system- or
-   user-specific belongs in a `CC_PICKER_*` environment variable with a
-   sensible automatic fallback
+   user-specific belongs in a `CC_PICKER_*` setting (config file and
+   environment variable) with a sensible automatic fallback
+5. Add a line to the topmost, unreleased section of [CHANGELOG.md](CHANGELOG.md)
 
 ## Translations
 

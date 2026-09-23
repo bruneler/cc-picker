@@ -1,5 +1,9 @@
 #!/bin/bash
 # install.sh — installs cc-picker for the current user
+#
+# The translated T_* messages are our own constants and are used as printf
+# format strings on purpose (they contain %s placeholders).
+# shellcheck disable=SC2059
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -107,6 +111,8 @@ ensure_path() {
 
     user_shell="${CC_PICKER_SHELL:-$(getent passwd "$(id -u)" 2>/dev/null | cut -d: -f7)}"
     user_shell="${user_shell:-${SHELL:-/bin/bash}}"
+    # The lines are written literally, so $HOME/$PATH must not expand here.
+    # shellcheck disable=SC2016
     case "$(basename "$user_shell")" in
         bash) rc_file="$HOME/.bashrc"
               line='export PATH="$HOME/.local/bin:$PATH"' ;;

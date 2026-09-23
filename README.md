@@ -69,7 +69,7 @@ optionally via `git clone`) → Claude Code starts right there.
 | ➕ **New project** | create one straight from the picker, optionally by cloning a Git remote |
 | 🔍 **Auto-detection** | `claude` binary (PATH, then common install locations), terminal emulator (gnome-terminal, konsole, xfce4-terminal, alacritty, kitty, xterm) and your login shell (bash, zsh, fish, …) |
 | 🌐 **English & German** | UI language follows your system locale (`$LANG`) |
-| ⚙️ **No hard-coded paths** | everything configurable via environment variables |
+| ⚙️ **No hard-coded paths** | everything configurable via a config file or environment variables |
 | 🧩 **Desktop integration** | its own icon in your application menu |
 
 ## Installation
@@ -111,6 +111,8 @@ is then only printed, not written.
 ```bash
 cc-picker                # choose a mode (GUI or shell)
 cc-picker --shell-mode   # go straight to the terminal menu
+cc-picker --help         # usage, projects folder and config file
+cc-picker --version      # show the version
 ```
 
 Or search for **cc-picker** in your application menu.
@@ -123,18 +125,29 @@ Or search for **cc-picker** in your application menu.
 
 ## Configuration
 
-Everything via environment variables – no need to edit the script:
+By default, projects live in `~/claude-projects`. To change this or any
+other setting, create `~/.config/cc-picker/config`:
+
+```ini
+# ~/.config/cc-picker/config
+CC_PICKER_BASE=~/code/ai-projects
+CC_PICKER_LANG=en
+```
+
+The config file also applies when you launch cc-picker from the app menu.
+Environment variables with the same names take precedence over it.
+The file is only read, never executed, and only the keys below are used:
 
 | Variable             | Default                        | Meaning                                          |
 |----------------------|--------------------------------|--------------------------------------------------|
-| `CC_PICKER_BASE`     | `~/Entwicklung/claude-code`    | folder where projects are listed and created     |
+| `CC_PICKER_BASE`     | `~/claude-projects`            | folder where projects are listed and created     |
 | `CC_PICKER_BIN`      | auto-detected                  | path to the `claude` binary                      |
 | `CC_PICKER_TERMINAL` | auto-detected                  | terminal emulator to use                         |
 | `CC_PICKER_SHELL`    | auto-detected (`/etc/passwd`)  | shell that keeps running after Claude Code exits |
 | `CC_PICKER_LANG`     | from `$LANG`                   | UI language: `de…` = German, otherwise English   |
 | `CC_PICKER_DIALOG`   | auto-detected                  | dialog tool: `zenity`, `kdialog` or `yad`        |
 
-Example:
+One-off example via environment variables:
 
 ```bash
 CC_PICKER_BASE=~/projects CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
