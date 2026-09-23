@@ -1,71 +1,75 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="cc-picker – Projekt wählen, Claude Code startet genau dort" width="100%">
+  <b>English</b> | <a href="README.de.md">Deutsch</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Lizenz-MIT-4f8cff" alt="Lizenz: MIT">
+  <img src="docs/banner.svg" alt="cc-picker – pick a project, Claude Code starts right there" width="100%">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-4f8cff" alt="License: MIT">
   <img src="https://img.shields.io/badge/Bash-%E2%89%A5%204-5fe0a0?logo=gnubash&logoColor=white" alt="Bash">
-  <img src="https://img.shields.io/badge/Plattform-Linux-8b93a6?logo=linux&logoColor=white" alt="Linux">
+  <img src="https://img.shields.io/badge/platform-Linux-8b93a6?logo=linux&logoColor=white" alt="Linux">
 </p>
 
-**cc-picker** ist ein kleiner Projekt-Launcher für
-[Claude Code](https://claude.com/product/claude-code): Du wählst einen
-Projektordner aus einer Liste (oder legst einen neuen an), und Claude Code
-startet **genau dort** – statt im Home-Verzeichnis oder vermischt mit
-anderen KI-Coding-Tools.
+**cc-picker** is a small project launcher for
+[Claude Code](https://claude.com/product/claude-code): pick a project folder
+from a list (or create a new one), and Claude Code starts **right there** –
+instead of in your home directory or mixed up with other AI coding tools.
 
-> **Hinweis:** cc-picker ist ein unabhängiges Community-Projekt und **nicht mit
-> Anthropic verbunden oder von Anthropic autorisiert**. "Claude" ist eine
-> Marke von Anthropic, PBC. Dieses Tool startet lediglich die offizielle
-> `claude`-Kommandozeile in einem von dir gewählten Ordner.
+> **Note:** cc-picker is an independent community project and is **not
+> affiliated with or endorsed by Anthropic**. "Claude" is a trademark of
+> Anthropic, PBC. This tool simply launches the official `claude`
+> command-line tool in a folder of your choice.
 
-## So funktioniert's
+## How it works
 
 <p align="center">
-  <img src="docs/flow.svg" alt="Ablauf: 1. cc-picker starten, 2. Modus GUI oder Shell wählen, 3. Projekt wählen oder neu anlegen, 4. Terminal öffnet sich im Projektordner und startet claude" width="100%">
+  <img src="docs/flow.svg" alt="Flow: 1. launch cc-picker, 2. choose GUI or shell mode, 3. pick or create a project, 4. a terminal opens in the project folder and starts claude" width="100%">
 </p>
 
-## Zwei Modi
+## Two modes
 
 <table>
   <tr>
-    <th width="50%">🖱️ GUI-Modus</th>
-    <th width="50%">⌨️ Shell-Modus</th>
+    <th width="50%">🖱️ GUI mode</th>
+    <th width="50%">⌨️ Shell mode</th>
   </tr>
   <tr>
-    <td><img src="docs/gui-mode.svg" alt="GUI-Modus: zenity-Fenster mit Projektliste"></td>
-    <td><img src="docs/shell-mode.svg" alt="Shell-Modus: nummeriertes Projektmenü im Terminal"></td>
+    <td><img src="docs/gui-mode.svg" alt="GUI mode: zenity window with project list"></td>
+    <td><img src="docs/shell-mode.svg" alt="Shell mode: numbered project menu in the terminal"></td>
   </tr>
   <tr>
-    <td>Auswahlfenster per <code>zenity</code>. Claude Code startet in einem
-    neuen Terminalfenster im gewählten Ordner.</td>
-    <td>Nummeriertes Menü direkt im Terminal – ideal per SSH oder ohne
-    Desktop. Wird automatisch genutzt, wenn <code>zenity</code> fehlt.</td>
+    <td>A picker window via <code>zenity</code>. Claude Code starts in a new
+    terminal window inside the chosen folder.</td>
+    <td>A numbered menu right in your terminal – great over SSH or without a
+    desktop. Used automatically when <code>zenity</code> is missing.</td>
   </tr>
 </table>
 
-## Warum?
+## Why?
 
-Wer mehrere KI-Coding-Tools parallel nutzt (z. B. Claude Code und ein
-anderes Tool auf demselben Rechner), will in der Regel:
+If you use several AI coding tools side by side (e.g. Claude Code and
+another tool on the same machine), you usually want:
 
-- 📂 **getrennte Arbeitskopien pro Tool** statt gemeinsam genutzter Ordner
-- ⚡ **schnellen Projektwechsel**, ohne sich Pfade merken zu müssen
-- 🔒 **Claude Code nicht versehentlich im ganzen Home-Verzeichnis** starten
-  (unnötig weitreichende Datei- und Ausführungsrechte)
+- 📂 **separate working copies per tool** instead of shared folders
+- ⚡ **quick switching between projects** without memorizing paths
+- 🔒 **no accidental Claude Code sessions in your entire home directory**
+  (needlessly broad file and execution access)
 
-cc-picker löst das mit einer einfachen Auswahlliste: Ordner wählen (oder neu
-anlegen, optional mit `git clone`) → Claude Code startet direkt dort.
+cc-picker solves this with a simple picker: choose a folder (or create one,
+optionally via `git clone`) → Claude Code starts right there.
 
 ## Features
 
 | | |
 |---|---|
-| 🪟 **GUI oder Shell** | beim Start wählbar; ohne `zenity` automatischer Fallback aufs Terminal-Menü |
-| ➕ **Neues Projekt** | direkt aus der Auswahl anlegen, optional per `git clone` einer Remote-URL |
-| 🔍 **Auto-Erkennung** | `claude`-Binary (PATH, dann gängige Installationsorte), Terminal-Emulator (gnome-terminal, konsole, xfce4-terminal, alacritty, kitty, xterm) und deine Login-Shell (bash, zsh, fish, …) |
-| ⚙️ **Keine hartcodierten Pfade** | alles über Umgebungsvariablen konfigurierbar |
-| 🧩 **Desktop-Integration** | eigenes Icon im Anwendungsmenü |
+| 🪟 **GUI or shell** | choose at startup; falls back to the terminal menu when `zenity` is missing |
+| ➕ **New project** | create one straight from the picker, optionally by cloning a Git remote |
+| 🔍 **Auto-detection** | `claude` binary (PATH, then common install locations), terminal emulator (gnome-terminal, konsole, xfce4-terminal, alacritty, kitty, xterm) and your login shell (bash, zsh, fish, …) |
+| 🌐 **English & German** | UI language follows your system locale (`$LANG`) |
+| ⚙️ **No hard-coded paths** | everything configurable via environment variables |
+| 🧩 **Desktop integration** | its own icon in your application menu |
 
 ## Installation
 
@@ -75,70 +79,71 @@ cd cc-picker
 ./install.sh
 ```
 
-<img src="cc-picker.svg" alt="cc-picker App-Icon" width="72" align="right">
+<img src="cc-picker.svg" alt="cc-picker app icon" width="72" align="right">
 
-Das Skript installiert:
+The installer sets up:
 
-| Datei | Zweck |
+| File | Purpose |
 |---|---|
-| `~/.local/bin/cc-picker` | ausführbares Skript |
-| `~/.local/share/applications/cc-picker.desktop` | Eintrag im Anwendungsmenü |
-| `~/.local/share/icons/cc-picker.svg` | App-Icon |
+| `~/.local/bin/cc-picker` | the executable script |
+| `~/.local/share/applications/cc-picker.desktop` | application menu entry |
+| `~/.local/share/icons/cc-picker.svg` | app icon |
 
-**PATH wird automatisch eingerichtet:** Ist `~/.local/bin` noch nicht im
-`PATH`, erkennt `install.sh` deine Login-Shell und ergänzt die passende
-Zeile – nur einmal, auch bei mehrfacher Installation:
+**PATH is set up automatically:** if `~/.local/bin` isn't in your `PATH`
+yet, `install.sh` detects your login shell and adds the matching line –
+only once, even if you install repeatedly:
 
-| Shell | Datei | Eintrag |
+| Shell | File | Entry |
 |---|---|---|
 | bash | `~/.bashrc` | `export PATH="$HOME/.local/bin:$PATH"` |
 | zsh | `~/.zshrc` | `export PATH="$HOME/.local/bin:$PATH"` |
 | fish | `~/.config/fish/config.fish` | `fish_add_path "$HOME/.local/bin"` |
-| andere | `~/.profile` | `export PATH="$HOME/.local/bin:$PATH"` |
+| other | `~/.profile` | `export PATH="$HOME/.local/bin:$PATH"` |
 
-Wer das lieber selbst macht: `CC_PICKER_NO_PATH=1 ./install.sh` – dann
-wird die Zeile nur angezeigt, nicht eingetragen.
+Prefer to do it yourself? Run `CC_PICKER_NO_PATH=1 ./install.sh` – the line
+is then only printed, not written.
 
-## Nutzung
-
-```bash
-cc-picker                # Modus-Auswahl (GUI oder Shell)
-cc-picker --shell-mode   # direkt das Terminal-Menü
-```
-
-Oder im Anwendungsmenü nach **cc-picker** suchen.
-
-1. Modus wählen: **GUI** oder **Shell**
-2. Projekt aus der Liste wählen – oder **„+ Neues Projekt erstellen"**
-   (Name eingeben, optional Git-Remote-URL zum Klonen)
-3. Ein Terminal öffnet sich im gewählten Ordner, `claude` startet dort.
-   Beendest du Claude Code, bleibt die Shell im Projektordner offen.
-
-## Konfiguration
-
-Alles über Umgebungsvariablen, kein Editieren des Skripts nötig:
-
-| Variable             | Standard                            | Bedeutung                                       |
-|----------------------|-------------------------------------|-------------------------------------------------|
-| `CC_PICKER_BASE`     | `~/Entwicklung/claude-code`         | Ordner, in dem Projekte gesucht/angelegt werden |
-| `CC_PICKER_BIN`      | automatisch erkannt                 | Pfad zur `claude`-Binary                        |
-| `CC_PICKER_TERMINAL` | automatisch erkannt                 | zu verwendender Terminal-Emulator               |
-| `CC_PICKER_SHELL`    | automatisch erkannt (`/etc/passwd`) | Shell, die nach Claude Code weiterläuft         |
-
-Beispiel:
+## Usage
 
 ```bash
-CC_PICKER_BASE=~/projekte CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
+cc-picker                # choose a mode (GUI or shell)
+cc-picker --shell-mode   # go straight to the terminal menu
 ```
 
-## Voraussetzungen
+Or search for **cc-picker** in your application menu.
+
+1. Choose a mode: **GUI** or **Shell**
+2. Pick a project from the list – or **"+ Create new project"**
+   (enter a name, optionally a Git remote URL to clone)
+3. A terminal opens in the chosen folder and starts `claude`.
+   When you quit Claude Code, the shell stays open in the project folder.
+
+## Configuration
+
+Everything via environment variables – no need to edit the script:
+
+| Variable             | Default                        | Meaning                                          |
+|----------------------|--------------------------------|--------------------------------------------------|
+| `CC_PICKER_BASE`     | `~/Entwicklung/claude-code`    | folder where projects are listed and created     |
+| `CC_PICKER_BIN`      | auto-detected                  | path to the `claude` binary                      |
+| `CC_PICKER_TERMINAL` | auto-detected                  | terminal emulator to use                         |
+| `CC_PICKER_SHELL`    | auto-detected (`/etc/passwd`)  | shell that keeps running after Claude Code exits |
+| `CC_PICKER_LANG`     | from `$LANG`                   | UI language: `de…` = German, otherwise English   |
+
+Example:
+
+```bash
+CC_PICKER_BASE=~/projects CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
+```
+
+## Requirements
 
 - `bash`
-- [`claude`](https://claude.com/product/claude-code) (Claude Code CLI), installiert und erreichbar
-- optional: `zenity` für den GUI-Modus
-- optional: `git` für „Neues Projekt erstellen" mit Klonen
+- [`claude`](https://claude.com/product/claude-code) (Claude Code CLI), installed and reachable
+- optional: `zenity` for GUI mode
+- optional: `git` for cloning when creating a new project
 
-## Deinstallation
+## Uninstall
 
 ```bash
 rm ~/.local/bin/cc-picker \
@@ -146,14 +151,14 @@ rm ~/.local/bin/cc-picker \
    ~/.local/share/icons/cc-picker.svg
 ```
 
-Deine Projektordner bleiben dabei unberührt. Einen von `install.sh`
-ergänzten PATH-Eintrag (markiert mit `# added by cc-picker install.sh`)
-kannst du bei Bedarf aus deiner Shell-Config löschen.
+Your project folders are left untouched. If `install.sh` added a PATH entry
+(marked `# added by cc-picker install.sh`), you can remove it from your shell
+config if you like.
 
-## Mitwirken
+## Contributing
 
-Issues und Pull Requests willkommen – siehe [CONTRIBUTING.md](CONTRIBUTING.md).
+Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Lizenz
+## License
 
 [MIT](LICENSE)

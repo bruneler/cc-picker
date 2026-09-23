@@ -32,8 +32,8 @@
 
   <!-- text -->
   <text x="262" y="178" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="64" font-weight="700" fill="#ffffff">cc-picker</text>
-  <text x="264" y="222" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="23" fill="#b4bccd">Pick a project. Claude Code starts right there.</text>
-  <text x="264" y="262" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#7f889c">GUI · Shell · Auto-detection · MIT</text>
+  <text x="264" y="222" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="23" fill="#b4bccd">Projekt wählen. Claude Code startet genau dort.</text>
+  <text x="264" y="262" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#7f889c">GUI · Shell · Auto-Erkennung · MIT</text>
 
   <!-- mini terminal -->
   <g transform="translate(812,70)">
@@ -45,10 +45,10 @@
     <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#c9d1e0">
       <text x="20" y="64"><tspan fill="#5fe0a0">$</tspan> cc-picker</text>
       <text x="20" y="102" fill="#8b93a6">1) api-server</text>
-      <text x="20" y="128" fill="#ffffff">2) my-webapp</text>
-      <text x="20" y="154" fill="#8b93a6">3) notes-app</text>
-      <text x="20" y="180" fill="#8b93a6">4) + Create new project</text>
-      <text x="20" y="218"><tspan fill="#5b9bff">→</tspan> claude in …/my-webapp</text>
+      <text x="20" y="128" fill="#ffffff">2) mein-webprojekt</text>
+      <text x="20" y="154" fill="#8b93a6">3) notizen-app</text>
+      <text x="20" y="180" fill="#8b93a6">4) + Neues Projekt erstellen</text>
+      <text x="20" y="218"><tspan fill="#5b9bff">→</tspan> claude in …/mein-webprojekt</text>
     </g>
   </g>
 </svg>

@@ -13,14 +13,14 @@
 
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#c9d1e0" xml:space="preserve">
     <text x="32" y="88"><tspan fill="#5fe0a0">$</tspan> cc-picker --shell-mode</text>
-    <text x="32" y="118" fill="#ffffff" font-weight="700">cc-picker — choose a project:</text>
-    <text x="32" y="160">1) api-server        3) notes-app</text>
-    <text x="32" y="186">2) my-webapp         4) website-relaunch</text>
-    <text x="32" y="212">5) + Create new project</text>
+    <text x="32" y="118" fill="#ffffff" font-weight="700">cc-picker — Projekt wählen:</text>
+    <text x="32" y="160">1) api-server        3) notizen-app</text>
+    <text x="32" y="186">2) mein-webprojekt   4) website-relaunch</text>
+    <text x="32" y="212">5) + Neues Projekt erstellen</text>
     <text x="32" y="250"><tspan fill="#8b93a6">#?</tspan> <tspan fill="#5b9bff" font-weight="700">2</tspan></text>
-    <text x="32" y="300" fill="#6b7386"># claude now starts in</text>
-    <text x="32" y="324" fill="#6b7386"># ~/Entwicklung/claude-code/my-webapp</text>
-    <text x="32" y="372"><tspan fill="#5fe0a0">~/…/my-webapp $</tspan> claude</text>
+    <text x="32" y="300" fill="#6b7386"># claude startet jetzt in</text>
+    <text x="32" y="324" fill="#6b7386"># ~/Entwicklung/claude-code/mein-webprojekt</text>
+    <text x="32" y="372"><tspan fill="#5fe0a0">~/…/mein-webprojekt $</tspan> claude</text>
   </g>
-  <rect x="236" y="359" width="9" height="17" fill="#c9d1e0" opacity="0.85"/>
+  <rect x="294" y="359" width="9" height="17" fill="#c9d1e0" opacity="0.85"/>
 </svg>

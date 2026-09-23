@@ -1,30 +1,42 @@
 # Contributing to cc-picker
 
-Danke für dein Interesse! Ein paar kurze Hinweise:
+Thanks for your interest! A few quick notes:
 
-## Bug melden / Feature vorschlagen
+## Reporting bugs / suggesting features
 
-Bitte als [Issue](../../issues) mit:
-- verwendete Distro/Shell/Terminal-Emulator
-- Ausgabe von `bash --version`, `zenity --version` (falls installiert)
-- Schritte zum Reproduzieren
+Please open an [issue](../../issues) and include:
+- your distro, shell and terminal emulator
+- the output of `bash --version` and `zenity --version` (if installed)
+- steps to reproduce
 
-## Pull Requests
+Issues in English or German are both fine.
 
-1. Fork erstellen, Branch von `main` abzweigen
-2. Änderungen so klein und fokussiert wie möglich halten
-3. Skript mit `bash -n cc-picker.sh` auf Syntaxfehler prüfen und manuell testen
-4. Keine neuen hartcodierten Pfade/Benutzernamen einführen — alles, was
-   system-/nutzerspezifisch ist, gehört über eine `CC_PICKER_*`-Umgebungs-
-   variable mit sinnvollem automatischem Fallback
+## Pull requests
 
-## Stil
+1. Fork the repo and branch off `main`
+2. Keep changes as small and focused as possible
+3. Check the scripts for syntax errors with `bash -n cc-picker.sh install.sh`
+   and test manually
+4. Don't introduce hard-coded paths or user names – anything system- or
+   user-specific belongs in a `CC_PICKER_*` environment variable with a
+   sensible automatic fallback
 
-- Reines POSIX-nahes Bash, keine Abhängigkeit von Bashisms vermeiden, die
-  nicht nötig sind
-- Kommentare auf Deutsch oder Englisch sind beide ok, aber innerhalb einer
-  Datei bitte konsistent bleiben
+## Translations
 
-## Verhaltenskodex
+User-facing text lives in the `T_*` variables at the top of `cc-picker.sh`
+and `install.sh`, in English and German. When you add or change a message,
+update both languages.
 
-Sei freundlich und respektvoll. Das war's.
+The README exists in two versions (`README.md` in English, `README.de.md` in
+German), each with its own illustrations in `docs/` (`*.svg` and `*.de.svg`).
+Please keep both in sync; if you only speak one of the languages, say so in
+the PR and someone can help with the other.
+
+## Style
+
+- Plain Bash; avoid Bashisms that aren't needed
+- Code comments and commit messages in English
+
+## Code of conduct
+
+Be kind and respectful. That's it.

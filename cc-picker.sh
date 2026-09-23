@@ -9,10 +9,50 @@
 set -euo pipefail
 
 BASE="${CC_PICKER_BASE:-$HOME/Entwicklung/claude-code}"
-NEW_ENTRY="+ Neues Projekt erstellen"
 
-# --- Claude-Binary automatisch finden ---
+# --- UI language: German for de_* locales, English otherwise ---
+UI_LANG="${CC_PICKER_LANG:-${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}}"
+case "$UI_LANG" in
+    de*)
+        T_NEW_ENTRY="+ Neues Projekt erstellen"
+        T_NO_CLAUDE="claude wurde nicht gefunden. Bitte CC_PICKER_BIN setzen oder claude installieren."
+        T_NO_TERMINAL="Kein unterstütztes Terminal gefunden. Bitte CC_PICKER_TERMINAL setzen."
+        T_NEW_TITLE="Neues Projekt"
+        T_NEW_NAME="Name des neuen Projektordners:"
+        T_CLONE_TITLE="Git-Repo (optional)"
+        T_CLONE_GUI="Git-Remote-URL zum Klonen, oder leer lassen für leeren Ordner:"
+        T_CLONE_SHELL="Git-Remote-URL zum Klonen (leer lassen für leeren Ordner):"
+        T_PICK_PROJECT="In welchem Projekt starten?"
+        T_COL_PROJECT="Projekt"
+        T_SHELL_HEADER="cc-picker — Projekt wählen:"
+        T_INVALID="Ungültige Auswahl, nochmal."
+        T_PICK_MODE="Wie möchtest du das Projekt auswählen?"
+        T_COL_MODE="Modus"
+        ;;
+    *)
+        T_NEW_ENTRY="+ Create new project"
+        T_NO_CLAUDE="claude not found. Please set CC_PICKER_BIN or install claude."
+        T_NO_TERMINAL="No supported terminal emulator found. Please set CC_PICKER_TERMINAL."
+        T_NEW_TITLE="New project"
+        T_NEW_NAME="Name of the new project folder:"
+        T_CLONE_TITLE="Git repo (optional)"
+        T_CLONE_GUI="Git remote URL to clone, or leave empty for an empty folder:"
+        T_CLONE_SHELL="Git remote URL to clone (leave empty for an empty folder):"
+        T_PICK_PROJECT="Which project do you want to start in?"
+        T_COL_PROJECT="Project"
+        T_SHELL_HEADER="cc-picker — choose a project:"
+        T_INVALID="Invalid choice, try again."
+        T_PICK_MODE="How do you want to choose the project?"
+        T_COL_MODE="Mode"
+        ;;
+esac
+
+# --- Locate the claude binary ---
 find_claude_bin() {
+    if [ -n "${CC_PICKER_BIN:-}" ]; then
+        echo "$CC_PICKER_BIN"
+        return 0
+    fi
     if command -v claude >/dev/null 2>&1; then
         command -v claude
         return 0
@@ -30,13 +70,12 @@ find_claude_bin() {
 }
 
 CLAUDE_BIN="$(find_claude_bin)" || {
-    zenity --error --text="claude wurde nicht gefunden. Bitte CC_PICKER_BIN setzen oder claude installieren." 2>/dev/null \
-        || echo "Fehler: claude wurde nicht gefunden. Bitte CC_PICKER_BIN setzen oder claude installieren." >&2
+    zenity --error --text="$T_NO_CLAUDE" 2>/dev/null \
+        || echo "cc-picker: $T_NO_CLAUDE" >&2
     exit 1
 }
-CLAUDE_BIN="${CC_PICKER_BIN:-$CLAUDE_BIN}"
 
-# --- Terminal-Emulator automatisch finden ---
+# --- Locate a terminal emulator ---
 find_terminal() {
     local terms=("gnome-terminal" "konsole" "xfce4-terminal" "alacritty" "kitty" "xterm")
     for t in "${terms[@]}"; do
@@ -46,7 +85,7 @@ find_terminal() {
 }
 TERMINAL_BIN="${CC_PICKER_TERMINAL:-$(find_terminal || echo "")}"
 
-# --- Nutzer-Shell automatisch erkennen (bash, zsh, fish, ...) ---
+# --- Detect the user's login shell (bash, zsh, fish, ...) ---
 find_user_shell() {
     if [ -n "${CC_PICKER_SHELL:-}" ]; then
         echo "$CC_PICKER_SHELL"
@@ -79,50 +118,49 @@ open_terminal() {
         alacritty)        alacritty --working-directory "$dir" -e bash -c "$full_cmd" ;;
         kitty)            kitty --directory "$dir" bash -c "$full_cmd" ;;
         xterm)            (cd "$dir" && xterm -e bash -c "$full_cmd") ;;
-        *)                echo "Kein unterstütztes Terminal gefunden. Bitte CC_PICKER_TERMINAL setzen."; return 1 ;;
+        *)                echo "$T_NO_TERMINAL"; return 1 ;;
     esac
 }
 
 new_project_gui() {
     local new_name target clone_url
-    new_name=$(zenity --entry --title="Neues Projekt" --text="Name des neuen Projektordners:") || return 1
+    new_name=$(zenity --entry --title="$T_NEW_TITLE" --text="$T_NEW_NAME") || return 1
     [ -z "$new_name" ] && return 1
     target="$BASE/$new_name"
     mkdir -p "$target"
-    clone_url=$(zenity --entry --title="Git-Repo (optional)" \
-        --text="Git-Remote-URL zum Klonen, oder leer lassen für leeren Ordner:") || true
+    clone_url=$(zenity --entry --title="$T_CLONE_TITLE" --text="$T_CLONE_GUI") || true
     [ -n "$clone_url" ] && git clone "$clone_url" "$target"
     echo "$target"
 }
 
 new_project_shell() {
     local new_name target clone_url
-    read -rp "Name des neuen Projektordners: " new_name
+    read -rp "$T_NEW_NAME " new_name
     [ -z "$new_name" ] && return 1
     target="$BASE/$new_name"
     mkdir -p "$target"
-    read -rp "Git-Remote-URL zum Klonen (leer lassen für leeren Ordner): " clone_url
+    read -rp "$T_CLONE_SHELL " clone_url
     [ -n "$clone_url" ] && git clone "$clone_url" "$target"
     echo "$target"
 }
 
 run_gui() {
     mapfile -t projects < <(find "$BASE" -mindepth 1 -maxdepth 1 -type d | sort)
-    names=("$NEW_ENTRY")
+    names=("$T_NEW_ENTRY")
     for p in "${projects[@]}"; do
         names+=("$(basename "$p")")
     done
 
     choice=$(zenity --list \
         --title="cc-picker" \
-        --text="In welchem Projekt starten?" \
-        --column="Projekt" \
+        --text="$T_PICK_PROJECT" \
+        --column="$T_COL_PROJECT" \
         "${names[@]}" \
         --height=350 --width=400) || exit 0
 
     [ -z "$choice" ] && exit 0
 
-    if [ "$choice" == "$NEW_ENTRY" ]; then
+    if [ "$choice" == "$T_NEW_ENTRY" ]; then
         target=$(new_project_gui) || exit 0
     else
         target="$BASE/$choice"
@@ -134,18 +172,18 @@ run_gui() {
 run_shell() {
     mapfile -t projects < <(find "$BASE" -mindepth 1 -maxdepth 1 -type d | sort)
 
-    echo "cc-picker — Projekt wählen:"
+    echo "$T_SHELL_HEADER"
     echo
 
     options=()
     for p in "${projects[@]}"; do
         options+=("$(basename "$p")")
     done
-    options+=("$NEW_ENTRY")
+    options+=("$T_NEW_ENTRY")
 
     select choice in "${options[@]}"; do
-        [ -z "$choice" ] && { echo "Ungültige Auswahl, nochmal."; continue; }
-        if [ "$choice" == "$NEW_ENTRY" ]; then
+        [ -z "$choice" ] && { echo "$T_INVALID"; continue; }
+        if [ "$choice" == "$T_NEW_ENTRY" ]; then
             target=$(new_project_shell) || exit 0
         else
             target="$BASE/$choice"
@@ -163,8 +201,8 @@ fi
 if command -v zenity >/dev/null 2>&1 && [ -n "$TERMINAL_BIN" ]; then
     mode=$(zenity --list \
         --title="cc-picker" \
-        --text="Wie möchtest du das Projekt auswählen?" \
-        --column="Modus" \
+        --text="$T_PICK_MODE" \
+        --column="$T_COL_MODE" \
         "GUI" "Shell" \
         --height=200 --width=300) || exit 0
 
