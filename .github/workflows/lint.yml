@@ -17,8 +17,8 @@ jobs:
         run: bash -n cc-picker.sh install.sh
       - name: ShellCheck
         run: shellcheck cc-picker.sh install.sh scripts/deploy-website.sh
-      - name: Website consent tests
-        run: node --test tests/website/analytics.test.cjs
+      - name: Website tests
+        run: node --test tests/website/*.test.cjs
       - name: Smoke test
         run: |
           ./cc-picker.sh --version

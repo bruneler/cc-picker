@@ -23,6 +23,8 @@ anderen KI-Coding-Tools.
 > Marke von Anthropic, PBC. Dieses Tool startet lediglich die offizielle
 > `claude`-Kommandozeile in einem von dir gewählten Ordner.
 
+Schritt-für-Schritt-Erklärungen findest du im [Benutzerhandbuch](https://cc-picker.brue.nu/manual.html).
+
 ## So funktioniert's
 
 <p align="center">

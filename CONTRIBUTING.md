@@ -70,3 +70,10 @@ maintained in bruneler/bruenus-infrastructure (ADR 0015).
 
 Please follow [SECURITY.md](SECURITY.md) to report vulnerabilities privately.
 Do not include secrets or personal project data in issues or pull requests.
+
+## Keeping the user guide current
+
+When user-facing behaviour changes, update both READMEs and the corresponding
+chapters in `website/manual.html` (German) and `website/manual.en.html` (English).
+Keep the plain-language steps and optional technical details consistent. The
+guide uses local fonts, works without JavaScript, and loads no analytics script.

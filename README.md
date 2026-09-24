@@ -22,6 +22,8 @@ instead of in your home directory or mixed up with other AI coding tools.
 > Anthropic, PBC. This tool simply launches the official `claude`
 > command-line tool in a folder of your choice.
 
+Step-by-step instructions are available in the [user guide](https://cc-picker.brue.nu/manual.en.html).
+
 ## How it works
 
 <p align="center">

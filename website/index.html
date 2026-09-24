@@ -266,6 +266,7 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
       <a href="#how" data-t="navHow">How it works</a>
       <a href="#install" data-t="navInstall">Install</a>
       <a href="#faq" data-t="navFaq">FAQ</a>
+      <a href="manual.en.html" data-manual data-t="navManual">Guide</a>
     </nav>
     <div class="switches">
       <span class="seg-label" data-t="explain">Explain it</span>
@@ -518,6 +519,7 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
   <footer>
     <nav aria-label="Links">
       <span>cc-picker 0.3.0</span>
+      <a href="manual.en.html" data-manual data-t="navManual">Guide</a>
       <a href="privacy.html">Datenschutz / Privacy</a>
       <button type="button" data-analytics-settings data-analytics-text="settings" hidden>Privacy settings</button>
       <a href="https://github.com/bruneler/cc-picker">GitHub</a>
@@ -538,6 +540,7 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
     navHow:    { en: "How it works", de: "So geht's" },
     navInstall:{ en: "Install", de: "Installieren" },
     navFaq:    { en: "FAQ", de: "FAQ" },
+    navManual: { en: "Guide", de: "Anleitung" },
     explain:   { en: "Explain it", de: "Erklärung" },
     plainBtn:  { en: "Plain", de: "Einfach" },
     techBtn:   { en: "Technical", de: "Technisch" },
@@ -735,6 +738,7 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
                                               : (f.dataset.name === "new" ? "Create a new project" : `Open ${tab}`));
     });
     if (lastPick) showTicket(lastPick);
+    document.querySelectorAll("[data-manual]").forEach(a => { a.href = l === "de" ? "manual.html" : "manual.en.html"; });
     store.set("cc-lang", l);
   }
   document.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
