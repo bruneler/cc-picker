@@ -313,7 +313,8 @@ $ claude
         </ol>
         <pre class="tech" data-t="withT">$ cc-picker
 # pick → terminal opens in ~/claude-projects/&lt;name&gt;
-#      → exec claude</pre>
+#      → exec claude
+$ cc-picker -c webapp   # or straight in, continuing</pre>
       </article>
     </div>
   </section>
@@ -321,18 +322,18 @@ $ claude
   <section class="band" id="how">
     <h2 data-t="doesH">What it does</h2>
     <p class="sub plain" data-t="doesSubP">Three things, done well.</p>
-    <p class="sub tech" data-t="doesSubT">One Bash script. No background service, no network code, no dependencies beyond a dialog tool and a terminal.</p>
+    <p class="sub tech" data-t="doesSubT">One Bash script. No background service, no dependencies beyond a dialog tool and a terminal. Network only when you ask: <code>git clone</code> and <code>--update</code>.</p>
     <div class="trio">
       <article class="card">
         <span class="sticker" style="--c: var(--f3)" aria-hidden="true">↑</span>
         <h3 data-t="pickH">Pick</h3>
         <p class="plain" data-t="pickP">A list of your projects. The ones you used lately sit on top, with “2 h ago” or “yesterday” next to them.</p>
-        <p class="tech" data-t="pickT">Recent list in <code>~/.local/state/cc-picker/recent</code> (max. 50). Deleted folders are skipped, hidden ones aren't listed.</p>
+        <p class="tech" data-t="pickT">Recent list in <code>~/.local/state/cc-picker/recent</code> (max. 50), pinned projects first. Deleted folders are skipped, hidden ones aren't listed.</p>
       </article>
       <article class="card">
         <span class="sticker" style="--c: var(--f4)" aria-hidden="true">+</span>
         <h3 data-t="createH">…or create</h3>
-        <p class="plain" data-t="createP">Starting fresh? Type a name. Code already online? Paste its address and it's downloaded for you.</p>
+        <p class="plain" data-t="createP">Starting fresh? Type a name and pick a template if you like. Code already online? Paste its address and it's downloaded for you.</p>
         <p class="tech" data-t="createT">Name validation (no <code>/</code>, no leading <code>.</code>/<code>-</code>). Optional <code>git clone</code> with a progress dialog; failures show git's reason and leave no empty folder.</p>
       </article>
       <article class="card">
@@ -340,6 +341,50 @@ $ claude
         <h3 data-t="startH">Start</h3>
         <p class="plain" data-t="startP">A terminal opens in that folder with Claude Code already running. Quit Claude, and you're still in the right place.</p>
         <p class="tech" data-t="startT">Commands are <code>%q</code>-quoted; works with gnome-terminal, konsole, xfce4-terminal, alacritty, kitty and xterm.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="band" id="more">
+    <h2 data-t="moreH">And a few more handy things</h2>
+    <p class="sub plain" data-t="moreSubP">New in version 0.3 – everything optional, nothing gets in your way.</p>
+    <p class="sub tech" data-t="moreSubT">New in 0.3.0. All of it configurable in <code>~/.config/cc-picker/config</code>.</p>
+    <div class="trio">
+      <article class="card">
+        <span class="sticker" style="--c: var(--f2)" aria-hidden="true">↩</span>
+        <h3 data-t="moreSessH">Pick up where you left off</h3>
+        <p class="plain" data-t="moreSessP">Worked on the project before? Start fresh, continue your last conversation with Claude, or pick an earlier one.</p>
+        <p class="tech" data-t="moreSessT">Asked only if the project has sessions: new, <code>claude --continue</code> or <code>--resume</code>. Skip it with <code>-n</code>/<code>-c</code>/<code>-r</code> or <code>CC_PICKER_SESSION</code>.</p>
+      </article>
+      <article class="card">
+        <span class="sticker" style="--c: var(--f3)" aria-hidden="true">⌕</span>
+        <h3 data-t="moreFindH">Find it fast</h3>
+        <p class="plain" data-t="moreFindP">Lots of projects? Type part of the name to filter the list. Or skip the list: <code>cc-picker notes</code> starts right in “notes”.</p>
+        <p class="tech" data-t="moreFindT">Text filter in the menu, <code>fzf</code> if installed. <code>cc-picker NAME</code> takes a unique prefix; <code>cc-picker -</code> opens the last project.</p>
+      </article>
+      <article class="card">
+        <span class="sticker" style="--c: var(--f1)" aria-hidden="true">⎇</span>
+        <h3 data-t="moreGitH">See where you stand</h3>
+        <p class="plain" data-t="moreGitP">For projects under version control, the list shows the branch and how many files you've changed – before you start.</p>
+        <p class="tech" data-t="moreGitT"><code>git status --porcelain -b</code> per repo, 2 s timeout, no lock files. Off with <code>CC_PICKER_GIT_STATUS=0</code>.</p>
+      </article>
+      <article class="card">
+        <span class="sticker" style="--c: var(--f4)" aria-hidden="true">★</span>
+        <h3 data-t="morePinH">Favourites & more folders</h3>
+        <p class="plain" data-t="morePinP">Pin the projects you use most – they stay on top. Projects spread over several folders? Show them all in one list.</p>
+        <p class="tech" data-t="morePinT">Pins in <code>~/.local/state/cc-picker/pinned</code>. <code>CC_PICKER_BASE=~/claude-projects:~/code</code> – new projects go into the first folder.</p>
+      </article>
+      <article class="card">
+        <span class="sticker" style="--c: var(--f2)" aria-hidden="true">▤</span>
+        <h3 data-t="moreTplH">Start with a template</h3>
+        <p class="plain" data-t="moreTplP">New projects can start from a template – for example with notes for Claude about the project already in place.</p>
+        <p class="tech" data-t="moreTplT">Folders in <code>~/.config/cc-picker/templates/</code>; <code>{{PROJECT_NAME}}</code> is filled in, then <code>git init</code>. Ships with <code>CLAUDE.md</code> + <code>.gitignore</code>. Cloning takes <code>user/repo</code>.</p>
+      </article>
+      <article class="card">
+        <span class="sticker" style="--c: var(--f3)" aria-hidden="true">⚙</span>
+        <h3 data-t="moreMgmtH">Tidy up & stay current</h3>
+        <p class="plain" data-t="moreMgmtP">Open a project in your file manager or editor, rename it, or put it away in the archive – nothing is deleted. Updates take one command.</p>
+        <p class="tech" data-t="moreMgmtT">“Manage projects” in the list: <code>xdg-open</code>, <code>CC_PICKER_EDITOR</code>, rename, archive to <code>.archive/</code> and restore. <code>cc-picker --update</code> installs the newest release.</p>
       </article>
     </div>
   </section>
@@ -360,14 +405,16 @@ $ claude
       <figure style="margin:0">
         <div class="mock-term">
 <pre data-t="menuMock">$ cc-picker --shell-mode
-cc-picker — choose a project:
 
-1) my-webapp      3) notes-app
-2) api-server     4) + Create new project
-#? 1</pre>
+  1) ★ my-webapp   (2 h ago · main)
+  2) api-server   (yesterday · dev · 3 changed)
+  3) notes-app   (5 days ago)
+  4) + Create new project
+  5) ⚙ Manage projects …
+#? api</pre>
         </div>
         <figcaption class="mode-cap plain" data-t="menuCapP"><b>The menu.</b> For people who live in the terminal – or work on another computer over the network.</figcaption>
-        <figcaption class="mode-cap tech" data-t="menuCapT"><b>The menu.</b> Runs in place via <code>select</code>; Ctrl+D quits with exit code 0.</figcaption>
+        <figcaption class="mode-cap tech" data-t="menuCapT"><b>The menu.</b> Runs in place: a number picks, text filters, <code>fzf</code> takes over if installed; Ctrl+D quits with exit code 0.</figcaption>
       </figure>
     </div>
   </section>
@@ -417,11 +464,15 @@ cc-picker — choose a project:
     </details>
     <details>
       <summary data-t="q4">Where do my projects live?</summary>
-      <p data-t="a4">In <code>~/claude-projects</code> by default. To use another folder, write <code>CC_PICKER_BASE=~/somewhere/else</code> into <code>~/.config/cc-picker/config</code>.</p>
+      <p data-t="a4">In <code>~/claude-projects</code> by default. To use another folder, write <code>CC_PICKER_BASE=~/somewhere/else</code> into <code>~/.config/cc-picker/config</code>. Several folders work too, separated by <code>:</code>.</p>
     </details>
     <details>
       <summary data-t="q5">Mac or Windows?</summary>
       <p data-t="a5">Not at the moment – cc-picker is made for Linux with Bash. It's tested on GNOME; KDE and other desktops work through kdialog or yad.</p>
+    </details>
+    <details>
+      <summary data-t="q8">How do I update?</summary>
+      <p data-t="a8">Run <code>cc-picker --update</code>. It installs the newest version if there is one, and keeps your settings, templates and project list.</p>
     </details>
     <details>
       <summary data-t="q6">How do I remove it?</summary>
@@ -483,20 +534,20 @@ cc-picker — choose a project:
     withH:     { en: "With cc-picker", de: "Mit cc-picker" },
     withP:     { en: "<li>Click the icon</li><li>Pick the project – recent ones are on top</li><li>Claude Code is running in the right folder</li>",
                  de: "<li>Aufs Icon klicken</li><li>Projekt wählen – zuletzt benutzte stehen oben</li><li>Claude Code läuft im richtigen Ordner</li>" },
-    withT:     { en: "$ cc-picker\n# pick → terminal opens in ~/claude-projects/&lt;name&gt;\n#      → exec claude",
-                 de: "$ cc-picker\n# wählen → Terminal öffnet in ~/claude-projects/&lt;name&gt;\n#        → exec claude" },
+    withT:     { en: "$ cc-picker\n# pick → terminal opens in ~/claude-projects/&lt;name&gt;\n#      → exec claude\n$ cc-picker -c webapp   # or straight in, continuing",
+                 de: "$ cc-picker\n# wählen → Terminal öffnet in ~/claude-projects/&lt;name&gt;\n#        → exec claude\n$ cc-picker -c webapp   # oder direkt, mit Fortsetzen" },
     doesH:     { en: "What it does", de: "Was es macht" },
     doesSubP:  { en: "Three things, done well.", de: "Drei Dinge – und die richtig." },
-    doesSubT:  { en: "One Bash script. No background service, no network code, no dependencies beyond a dialog tool and a terminal.",
-                 de: "Ein Bash-Skript. Kein Hintergrunddienst, kein Netzwerkcode, keine Abhängigkeiten außer einem Dialog-Programm und einem Terminal." },
+    doesSubT:  { en: "One Bash script. No background service, no dependencies beyond a dialog tool and a terminal. Network only when you ask: <code>git clone</code> and <code>--update</code>.",
+                 de: "Ein Bash-Skript. Kein Hintergrunddienst, keine Abhängigkeiten außer einem Dialog-Programm und einem Terminal. Netzwerk nur auf Wunsch: <code>git clone</code> und <code>--update</code>." },
     pickH:     { en: "Pick", de: "Wählen" },
     pickP:     { en: "A list of your projects. The ones you used lately sit on top, with “2 h ago” or “yesterday” next to them.",
                  de: "Eine Liste deiner Projekte. Die zuletzt benutzten stehen oben, mit „vor 2 Std.“ oder „gestern“ daneben." },
-    pickT:     { en: "Recent list in <code>~/.local/state/cc-picker/recent</code> (max. 50). Deleted folders are skipped, hidden ones aren't listed.",
-                 de: "Verlauf in <code>~/.local/state/cc-picker/recent</code> (max. 50). Gelöschte Ordner werden übersprungen, versteckte nicht angezeigt." },
+    pickT:     { en: "Recent list in <code>~/.local/state/cc-picker/recent</code> (max. 50), pinned projects first. Deleted folders are skipped, hidden ones aren't listed.",
+                 de: "Verlauf in <code>~/.local/state/cc-picker/recent</code> (max. 50), angeheftete Projekte zuerst. Gelöschte Ordner werden übersprungen, versteckte nicht angezeigt." },
     createH:   { en: "…or create", de: "…oder neu anlegen" },
-    createP:   { en: "Starting fresh? Type a name. Code already online? Paste its address and it's downloaded for you.",
-                 de: "Neu anfangen? Namen eintippen. Liegt der Code schon online? Adresse einfügen – er wird für dich heruntergeladen." },
+    createP:   { en: "Starting fresh? Type a name and pick a template if you like. Code already online? Paste its address and it's downloaded for you.",
+                 de: "Neu anfangen? Namen eintippen und bei Bedarf eine Vorlage wählen. Liegt der Code schon online? Adresse einfügen – er wird für dich heruntergeladen." },
     createT:   { en: "Name validation (no <code>/</code>, no leading <code>.</code>/<code>-</code>). Optional <code>git clone</code> with a progress dialog; failures show git's reason and leave no empty folder.",
                  de: "Namensprüfung (kein <code>/</code>, kein führender <code>.</code>/<code>-</code>). Optional <code>git clone</code> mit Fortschrittsanzeige; bei Fehlern steht der Grund von git da, und es bleibt kein leerer Ordner zurück." },
     startH:    { en: "Start", de: "Starten" },
@@ -504,6 +555,48 @@ cc-picker — choose a project:
                  de: "Ein Terminal öffnet sich in diesem Ordner, Claude Code läuft schon. Beendest du Claude, bist du immer noch am richtigen Ort." },
     startT:    { en: "Commands are <code>%q</code>-quoted; works with gnome-terminal, konsole, xfce4-terminal, alacritty, kitty and xterm.",
                  de: "Befehle werden mit <code>%q</code> maskiert; läuft mit gnome-terminal, konsole, xfce4-terminal, alacritty, kitty und xterm." },
+    moreH: { en: "And a few more handy things",
+           de: "Und noch ein paar praktische Dinge" },
+    moreSubP: { en: "New in version 0.3 – everything optional, nothing gets in your way.",
+              de: "Neu in Version 0.3 – alles optional, nichts steht im Weg." },
+    moreSubT: { en: "New in 0.3.0. All of it configurable in <code>~/.config/cc-picker/config</code>.",
+              de: "Neu in 0.3.0. Alles einstellbar in <code>~/.config/cc-picker/config</code>." },
+    moreSessH: { en: "Pick up where you left off",
+               de: "Weitermachen, wo du warst" },
+    moreSessP: { en: "Worked on the project before? Start fresh, continue your last conversation with Claude, or pick an earlier one.",
+               de: "Schon mal am Projekt gearbeitet? Neu anfangen, das letzte Gespräch mit Claude fortsetzen oder ein früheres auswählen." },
+    moreSessT: { en: "Asked only if the project has sessions: new, <code>claude --continue</code> or <code>--resume</code>. Skip it with <code>-n</code>/<code>-c</code>/<code>-r</code> or <code>CC_PICKER_SESSION</code>.",
+               de: "Gefragt wird nur, wenn es Sitzungen gibt: neu, <code>claude --continue</code> oder <code>--resume</code>. Überspringen mit <code>-n</code>/<code>-c</code>/<code>-r</code> oder <code>CC_PICKER_SESSION</code>." },
+    moreFindH: { en: "Find it fast",
+               de: "Schnell gefunden" },
+    moreFindP: { en: "Lots of projects? Type part of the name to filter the list. Or skip the list: <code>cc-picker notes</code> starts right in “notes”.",
+               de: "Viele Projekte? Einen Teil des Namens tippen, und die Liste wird gefiltert. Oder ganz ohne Liste: <code>cc-picker notes</code> startet direkt in „notes“." },
+    moreFindT: { en: "Text filter in the menu, <code>fzf</code> if installed. <code>cc-picker NAME</code> takes a unique prefix; <code>cc-picker -</code> opens the last project.",
+               de: "Textfilter im Menü, <code>fzf</code> falls installiert. <code>cc-picker NAME</code> nimmt einen eindeutigen Anfang; <code>cc-picker -</code> öffnet das letzte Projekt." },
+    moreGitH: { en: "See where you stand",
+              de: "Sehen, wo du stehst" },
+    moreGitP: { en: "For projects under version control, the list shows the branch and how many files you've changed – before you start.",
+              de: "Bei Projekten mit Versionsverwaltung zeigt die Liste den Branch und wie viele Dateien du geändert hast – noch vor dem Start." },
+    moreGitT: { en: "<code>git status --porcelain -b</code> per repo, 2 s timeout, no lock files. Off with <code>CC_PICKER_GIT_STATUS=0</code>.",
+              de: "<code>git status --porcelain -b</code> pro Repo, 2 s Timeout, ohne Lock-Dateien. Aus mit <code>CC_PICKER_GIT_STATUS=0</code>." },
+    morePinH: { en: "Favourites & more folders",
+              de: "Favoriten & mehr Ordner" },
+    morePinP: { en: "Pin the projects you use most – they stay on top. Projects spread over several folders? Show them all in one list.",
+              de: "Heft die wichtigsten Projekte an – sie bleiben oben. Projekte in mehreren Ordnern? Alle in einer Liste." },
+    morePinT: { en: "Pins in <code>~/.local/state/cc-picker/pinned</code>. <code>CC_PICKER_BASE=~/claude-projects:~/code</code> – new projects go into the first folder.",
+              de: "Favoriten in <code>~/.local/state/cc-picker/pinned</code>. <code>CC_PICKER_BASE=~/claude-projects:~/code</code> – neue Projekte landen im ersten Ordner." },
+    moreTplH: { en: "Start with a template",
+              de: "Mit Vorlage starten" },
+    moreTplP: { en: "New projects can start from a template – for example with notes for Claude about the project already in place.",
+              de: "Neue Projekte können mit einer Vorlage beginnen – zum Beispiel mit vorbereiteten Notizen für Claude über das Projekt." },
+    moreTplT: { en: "Folders in <code>~/.config/cc-picker/templates/</code>; <code>{{PROJECT_NAME}}</code> is filled in, then <code>git init</code>. Ships with <code>CLAUDE.md</code> + <code>.gitignore</code>. Cloning takes <code>user/repo</code>.",
+              de: "Ordner in <code>~/.config/cc-picker/templates/</code>; <code>{{PROJECT_NAME}}</code> wird ersetzt, dann <code>git init</code>. Mitgeliefert: <code>CLAUDE.md</code> + <code>.gitignore</code>. Klonen geht mit <code>benutzer/repo</code>." },
+    moreMgmtH: { en: "Tidy up & stay current",
+               de: "Aufräumen & aktuell bleiben" },
+    moreMgmtP: { en: "Open a project in your file manager or editor, rename it, or put it away in the archive – nothing is deleted. Updates take one command.",
+               de: "Projekt im Dateimanager oder Editor öffnen, umbenennen oder ins Archiv legen – gelöscht wird nichts. Updates brauchen einen Befehl." },
+    moreMgmtT: { en: "“Manage projects” in the list: <code>xdg-open</code>, <code>CC_PICKER_EDITOR</code>, rename, archive to <code>.archive/</code> and restore. <code>cc-picker --update</code> installs the newest release.",
+               de: "„Projekte verwalten“ in der Liste: <code>xdg-open</code>, <code>CC_PICKER_EDITOR</code>, umbenennen, nach <code>.archive/</code> archivieren und zurückholen. <code>cc-picker --update</code> installiert die neueste Version." },
     waysH:     { en: "Two ways to choose", de: "Zwei Wege zur Auswahl" },
     waysSubP:  { en: "Click through a window, or type a number – whatever feels natural.",
                  de: "Im Fenster klicken oder eine Zahl tippen – wie es dir lieber ist." },
@@ -513,12 +606,12 @@ cc-picker — choose a project:
                  de: "<b>Das Fenster.</b> Erscheint, wenn du im Anwendungsmenü aufs Icon klickst." },
     winCapT:   { en: "<b>The window.</b> zenity (GNOME), kdialog (KDE) or yad – whichever is installed. Real screenshot, zenity 4.",
                  de: "<b>Das Fenster.</b> zenity (GNOME), kdialog (KDE) oder yad – je nachdem, was installiert ist. Echter Screenshot, zenity 4." },
-    menuMock:  { en: "$ cc-picker --shell-mode\ncc-picker — choose a project:\n\n1) my-webapp      3) notes-app\n2) api-server     4) + Create new project\n#? 1",
-                 de: "$ cc-picker --shell-mode\ncc-picker — Projekt wählen:\n\n1) my-webapp      3) notes-app\n2) api-server     4) + Neues Projekt erstellen\n#? 1" },
+    menuMock:  { en: "$ cc-picker --shell-mode\n\n  1) ★ my-webapp   (2 h ago · main)\n  2) api-server   (yesterday · dev · 3 changed)\n  3) notes-app   (5 days ago)\n  4) + Create new project\n  5) ⚙ Manage projects …\n#? api",
+                 de: "$ cc-picker --shell-mode\n\n  1) ★ my-webapp   (vor 2 Std. · main)\n  2) api-server   (gestern · dev · 3 geändert)\n  3) notes-app   (vor 5 Tagen)\n  4) + Neues Projekt erstellen\n  5) ⚙ Projekte verwalten …\n#? api" },
     menuCapP:  { en: "<b>The menu.</b> For people who live in the terminal – or work on another computer over the network.",
                  de: "<b>Das Menü.</b> Für alle, die gern im Terminal arbeiten – oder per Netzwerk an einem anderen Rechner." },
-    menuCapT:  { en: "<b>The menu.</b> Runs in place via <code>select</code>; Ctrl+D quits with exit code 0.",
-                 de: "<b>Das Menü.</b> Läuft direkt im Terminal über <code>select</code>; Strg+D beendet mit Exit-Code 0." },
+    menuCapT:  { en: "<b>The menu.</b> Runs in place: a number picks, text filters, <code>fzf</code> takes over if installed; Ctrl+D quits with exit code 0.",
+                 de: "<b>Das Menü.</b> Läuft direkt im Terminal: Zahl wählt, Text filtert, mit <code>fzf</code> falls installiert; Strg+D beendet mit Exit-Code 0." },
     instH:     { en: "Install it", de: "Installieren" },
     needs:     { en: "You need:", de: "Du brauchst:" },
     needsOpt:  { en: "a desktop for the window (optional)", de: "einen Desktop fürs Fenster (optional)" },
@@ -551,11 +644,14 @@ cc-picker — choose a project:
     a3:        { en: "Only for the two install lines. After that, cc-picker lives in your app menu and works with clicks.",
                  de: "Nur für die zwei Zeilen bei der Installation. Danach liegt cc-picker im Anwendungsmenü und funktioniert per Klick." },
     q4:        { en: "Where do my projects live?", de: "Wo liegen meine Projekte?" },
-    a4:        { en: "In <code>~/claude-projects</code> by default. To use another folder, write <code>CC_PICKER_BASE=~/somewhere/else</code> into <code>~/.config/cc-picker/config</code>.",
-                 de: "Standardmäßig in <code>~/claude-projects</code>. Für einen anderen Ordner schreib <code>CC_PICKER_BASE=~/irgendwo/anders</code> in <code>~/.config/cc-picker/config</code>." },
+    a4:        { en: "In <code>~/claude-projects</code> by default. To use another folder, write <code>CC_PICKER_BASE=~/somewhere/else</code> into <code>~/.config/cc-picker/config</code>. Several folders work too, separated by <code>:</code>.",
+                 de: "Standardmäßig in <code>~/claude-projects</code>. Für einen anderen Ordner schreib <code>CC_PICKER_BASE=~/irgendwo/anders</code> in <code>~/.config/cc-picker/config</code>. Mehrere Ordner gehen auch, getrennt durch <code>:</code>." },
     q5:        { en: "Mac or Windows?", de: "Mac oder Windows?" },
     a5:        { en: "Not at the moment – cc-picker is made for Linux with Bash. It's tested on GNOME; KDE and other desktops work through kdialog or yad.",
                  de: "Im Moment nicht – cc-picker ist für Linux mit Bash gemacht. Getestet unter GNOME; KDE und andere Desktops funktionieren über kdialog oder yad." },
+    q8:        { en: "How do I update?", de: "Wie aktualisiere ich?" },
+    a8:        { en: "Run <code>cc-picker --update</code>. It installs the newest version if there is one, and keeps your settings, templates and project list.",
+                 de: "Mit <code>cc-picker --update</code>. Es installiert die neueste Version, falls es eine gibt, und behält Einstellungen, Vorlagen und Projektliste." },
     q6:        { en: "How do I remove it?", de: "Wie werde ich es wieder los?" },
     a6:        { en: "Delete three files: <code>rm ~/.local/bin/cc-picker ~/.local/share/applications/cc-picker.desktop ~/.local/share/icons/cc-picker.svg</code>. Your projects stay where they are.",
                  de: "Drei Dateien löschen: <code>rm ~/.local/bin/cc-picker ~/.local/share/applications/cc-picker.desktop ~/.local/share/icons/cc-picker.svg</code>. Deine Projekte bleiben, wo sie sind." },
