@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed
+- `--update` no longer prints Git's "detached HEAD" advice
+
 ## [0.3.0] – 2026-09-24
 
 ### Added

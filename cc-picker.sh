@@ -1251,7 +1251,7 @@ self_update() {
     [ -z "$tag" ] || ref=(--branch "$tag")
     UPDATE_TMP="$(mktemp -d)"
     trap 'rm -rf "$UPDATE_TMP"' EXIT
-    if ! git clone -q --depth 1 "${ref[@]}" -- "$UPDATE_REPO" "$UPDATE_TMP/cc-picker" >&2; then
+    if ! git -c advice.detachedHead=false clone -q --depth 1 "${ref[@]}" -- "$UPDATE_REPO" "$UPDATE_TMP/cc-picker" >&2; then
         echo "cc-picker: $T_UPD_FAIL git clone $UPDATE_REPO" >&2
         exit 1
     fi
