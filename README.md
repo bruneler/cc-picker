@@ -348,6 +348,10 @@ Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 [MIT](LICENSE)
 
+cc-picker is provided without warranty. The warranty and liability provisions
+of the MIT License apply to the extent permitted by law. Back up important
+data regularly and review the permissions you grant to Claude Code.
+
 ---
 
 ChatGPT and Claude Code assisted in the development of cc-picker. I maintain
