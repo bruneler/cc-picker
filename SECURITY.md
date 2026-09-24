@@ -8,7 +8,7 @@ Older versions are not supported; `main` is development code, not a release.
 
 ## Report a vulnerability privately
 
-Email **datenschutz@brue.nu**, the project's existing private contact mailbox,
+Email **oss-security@brue.nu**, the project's dedicated security contact mailbox,
 with the subject **cc-picker security report**. Do not report an unpatched
 vulnerability first in a public issue, pull request or discussion.
 
@@ -16,7 +16,7 @@ Include the affected version, Linux distribution and Bash version, the impact,
 and minimal reproduction steps using disposable folders and fake credentials.
 Do not send real passwords, tokens, private keys, personal project contents or
 unredacted logs. If sensitive evidence is needed, first ask how to share it
-securely. This mailbox is also used for privacy enquiries.
+securely.
 
 The maintainer will assess the report privately and coordinate a fix and public
 disclosure with the reporter. This is a volunteer project; there is no guaranteed
