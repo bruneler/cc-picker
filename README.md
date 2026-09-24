@@ -298,12 +298,30 @@ Your project folders are left untouched. If `install.sh` added a PATH entry
 config if you like.
 
 Settings, templates, the list of recently used projects and the pinned
-projects live in small local files – nothing is sent anywhere. To remove
+projects live in small local files; the launcher does not send these files
+to the project maintainer or Matomo. To remove
 them as well:
 
 ```bash
 rm -r ~/.config/cc-picker ~/.local/state/cc-picker
 ```
+
+## Privacy
+
+The **installed cc-picker launcher has no telemetry**. Settings, project
+history and templates stay on your computer. Optional Git cloning connects
+to the chosen remote; `cc-picker --update` connects to GitHub (or your configured
+update repository), and installing missing packages contacts your package
+sources. Claude Code and programs you open have their own network behaviour
+and privacy policies.
+
+The **project website** at [cc-picker.brue.nu](https://cc-picker.brue.nu/)
+uses self-hosted Matomo **only after your consent**, separately from the launcher.
+The current notice discloses full IP addresses, analytics cookies and no
+enforced automatic deletion period. You can decline or withdraw consent in
+[Privacy settings](https://cc-picker.brue.nu/#privacy-settings); DNT and GPC
+are respected. See the [privacy notice](https://cc-picker.brue.nu/privacy.html)
+for data categories, storage, hosting and contact details.
 
 ## Contributing
 
