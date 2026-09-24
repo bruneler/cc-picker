@@ -3,14 +3,16 @@
 ## Supported versions
 
 Security fixes target the latest release in the **0.3.x** series (currently
-0.3.1). Please update to the latest patch release before reporting an issue.
+0.3.2). Please update to the latest patch release before reporting an issue.
 Older versions are not supported; `main` is development code, not a release.
 
 ## Report a vulnerability privately
 
-Email **oss-security@brue.nu**, the project's dedicated security contact mailbox,
-with the subject **cc-picker security report**. Do not report an unpatched
-vulnerability first in a public issue, pull request or discussion.
+Use [GitHub private vulnerability reporting](https://github.com/bruneler/cc-picker/security/advisories/new)
+to contact the maintainer privately. Alternatively, email **oss-security@brue.nu**,
+the project's dedicated security contact mailbox, with the subject
+**cc-picker security report**. Do not report an unpatched vulnerability first
+in a public issue, pull request or discussion.
 
 Include the affected version, Linux distribution and Bash version, the impact,
 and minimal reproduction steps using disposable folders and fake credentials.

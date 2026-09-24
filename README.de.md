@@ -353,6 +353,10 @@ Issues und Pull Requests willkommen – siehe [CONTRIBUTING.md](CONTRIBUTING.md)
 
 [MIT](LICENSE)
 
+cc-picker wird ohne Gewährleistung bereitgestellt. Es gelten die Gewährleistungs-
+und Haftungsregelungen der MIT-Lizenz, soweit gesetzlich zulässig. Sichere
+wichtige Daten regelmäßig und prüfe die Berechtigungen, die du Claude Code erteilst.
+
 ---
 
 Bei der Entwicklung von cc-picker haben ChatGPT und Claude Code unterstützt.
