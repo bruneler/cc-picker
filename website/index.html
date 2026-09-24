@@ -416,7 +416,7 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
   <section class="band">
     <h2 data-t="waysH">Two ways to choose</h2>
     <p class="sub plain" data-t="waysSubP">Click through a window, or type a number – whatever feels natural.</p>
-    <p class="sub tech" data-t="waysSubT">The window is the default; <code>--shell-mode</code> or <code>CC_PICKER_MODE=shell</code> for the menu. No dialog tool installed? It falls back to the menu automatically.</p>
+    <p class="sub tech" data-t="waysSubT">The window is the default; <code>--shell-mode</code> or <code>CC_PICKER_MODE=shell</code> for the menu. The installer offers to add a missing dialog tool. If it remains unavailable, normal launches use the menu without asking again.</p>
     <div class="modes">
       <figure style="margin:0">
         <picture>
@@ -464,7 +464,7 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
         <li><span><span class="plain" data-t="ck1P">Adds cc-picker to your app menu, with its own icon</span><span class="tech" data-t="ck1T"><code>~/.local/share/applications/cc-picker.desktop</code> + icon</span></span></li>
         <li><span><span class="plain" data-t="ck2P">Makes the <code>cc-picker</code> command work in any terminal</span><span class="tech" data-t="ck2T">Adds <code>~/.local/bin</code> to <code>PATH</code> for bash, zsh, fish or <code>~/.profile</code> – once</span></span></li>
         <li><span><span class="plain" data-t="ck3P">Checks that everything it needs is there</span><span class="tech" data-t="ck3T">claude, a terminal emulator, git, a dialog tool</span></span></li>
-        <li><span><span class="plain" data-t="ck4P">Asks before installing anything extra – and shows exactly what it would run</span><span class="tech" data-t="ck4T">e.g. <code>sudo pacman -S --needed zenity</code>, only after confirmation</span></span></li>
+        <li><span><span class="plain" data-t="ck4P">If window support is missing, the installer offers to install it, shows the command first and asks for your approval. If you decline, the terminal menu remains available.</span><span class="tech" data-t="ck4T">Missing dialog tool: offers <code>kdialog</code> on KDE or <code>zenity</code> elsewhere; displays the package command and asks before running it.</span></span></li>
       </ul>
     </div>
   </section>
@@ -638,8 +638,8 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
     waysH:     { en: "Two ways to choose", de: "Zwei Wege zur Auswahl" },
     waysSubP:  { en: "Click through a window, or type a number – whatever feels natural.",
                  de: "Im Fenster klicken oder eine Zahl tippen – wie es dir lieber ist." },
-    waysSubT:  { en: "The window is the default; <code>--shell-mode</code> or <code>CC_PICKER_MODE=shell</code> for the menu. No dialog tool installed? It falls back to the menu automatically.",
-                 de: "Standard ist das Fenster; <code>--shell-mode</code> oder <code>CC_PICKER_MODE=shell</code> für das Menü. Ohne Dialog-Programm wird automatisch das Menü genutzt." },
+    waysSubT:  { en: "The window is the default; <code>--shell-mode</code> or <code>CC_PICKER_MODE=shell</code> for the menu. The installer offers to add a missing dialog tool. If it remains unavailable, normal launches use the menu without asking again.",
+                 de: "Standard ist das Fenster; <code>--shell-mode</code> oder <code>CC_PICKER_MODE=shell</code> für das Menü. Der Installer bietet fehlende Dialogprogramme zur Installation an. Fehlen sie weiterhin, startet das Menü ohne erneute Nachfrage." },
     winCapP:   { en: "<b>The window.</b> Opens when you click the icon in your app menu.",
                  de: "<b>Das Fenster.</b> Erscheint, wenn du im Anwendungsmenü aufs Icon klickst." },
     winCapT:   { en: "<b>The window.</b> zenity (GNOME), kdialog (KDE) or yad – whichever is installed. Real screenshot, zenity 4.",
@@ -666,10 +666,10 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
                  de: "Ergänzt <code>~/.local/bin</code> im <code>PATH</code> für bash, zsh, fish oder <code>~/.profile</code> – einmalig" },
     ck3P:      { en: "Checks that everything it needs is there", de: "Prüft, ob alles Nötige da ist" },
     ck3T:      { en: "claude, a terminal emulator, git, a dialog tool", de: "claude, Terminal-Emulator, git, Dialog-Programm" },
-    ck4P:      { en: "Asks before installing anything extra – and shows exactly what it would run",
-                 de: "Fragt, bevor es etwas nachinstalliert – und zeigt genau, was es ausführen würde" },
-    ck4T:      { en: "e.g. <code>sudo pacman -S --needed zenity</code>, only after confirmation",
-                 de: "z. B. <code>sudo pacman -S --needed zenity</code>, nur nach Bestätigung" },
+    ck4P:      { en: "If window support is missing, the installer offers to install it, shows the command first and asks for your approval. If you decline, the terminal menu remains available.",
+                 de: "Fehlt die Fensterunterstützung, bietet der Installer ihre Installation an – mit vorheriger Befehlsanzeige und nur nach deiner Zustimmung. Ohne Installation bleibt das Terminal-Menü verfügbar." },
+    ck4T:      { en: "Missing dialog tool: offers <code>kdialog</code> on KDE or <code>zenity</code> elsewhere; displays the package command and asks before running it.",
+                 de: "Fehlendes Dialogprogramm: bietet unter KDE <code>kdialog</code>, sonst <code>zenity</code> an; zeigt den Paketbefehl und fragt vor dem Ausführen." },
     faqH:      { en: "Good to know", de: "Gut zu wissen" },
     q1:        { en: "Is this made by Anthropic?", de: "Ist das von Anthropic?" },
     a1:        { en: "No. cc-picker is an independent community project. It simply starts the official <code>claude</code> program in a folder you choose.",

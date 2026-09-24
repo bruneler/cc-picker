@@ -137,7 +137,13 @@ only once, even if you install repeatedly:
 Prefer to do it yourself? Run `CC_PICKER_NO_PATH=1 ./install.sh` – the line
 is then only printed, not written.
 
-**Dependencies are checked too** – see [Dependencies](#dependencies).
+**Missing window support?** During installation, cc-picker checks for a
+dialog tool. If none is available, the installer offers to install `kdialog`
+on KDE or `zenity` elsewhere. It shows the exact command first and runs it
+only with your approval. If you decline, the terminal menu remains available.
+Normal launches do not ask again.
+
+See [Dependencies](#dependencies) for details.
 
 ## Usage
 
@@ -269,8 +275,10 @@ Install? [Y/n]
 ```
 
 Nothing is installed without your confirmation, and `sudo` asks for your
-password itself – the installer never runs as root. To skip the check, use
-`CC_PICKER_NO_DEPS=1 ./install.sh`.
+password itself – the installer never runs as root. To skip automatic dependency installation, use
+`CC_PICKER_NO_DEPS=1 ./install.sh`. Without an interactive terminal, the installer
+also skips the prompt and prints the installation command instead. If no
+supported package manager is found, it provides manual installation guidance.
 
 Installing a dialog tool manually:
 
