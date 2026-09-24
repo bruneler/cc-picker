@@ -6,6 +6,7 @@
 - German and English user guides on the website, with six chapters and optional technical details
 
 ### Changed
+- Clarify the installer’s optional GUI dependency installation prompt across both READMEs and website languages
 - Add a first-project welcome and an AI-assistance note to both READMEs
 - Explain website consent storage and cookie durations in plain language in German and English
 

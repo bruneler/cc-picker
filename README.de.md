@@ -140,7 +140,13 @@ Zeile – nur einmal, auch bei mehrfacher Installation:
 Wer das lieber selbst macht: `CC_PICKER_NO_PATH=1 ./install.sh` – dann
 wird die Zeile nur angezeigt, nicht eingetragen.
 
-**Auch die Abhängigkeiten werden geprüft** – siehe [Abhängigkeiten](#abhängigkeiten).
+**Fehlt die Fensterunterstützung?** Beim Installieren erkennt cc-picker, ob ein
+Dialogprogramm vorhanden ist. Fehlt es, bietet der Installer die Installation
+an: unter KDE `kdialog`, sonst `zenity`. Er zeigt vorher den genauen Befehl
+und führt ihn nur nach deiner Zustimmung aus. Lehnst du ab, bleibt das
+Terminal-Menü verfügbar. Beim normalen Start wird nicht erneut nachgefragt.
+
+Weitere Details unter [Abhängigkeiten](#abhängigkeiten).
 
 ## Nutzung
 
@@ -273,8 +279,10 @@ Installieren? [J/n]
 ```
 
 Ohne deine Bestätigung wird nichts installiert, und das Passwort fragt `sudo`
-selbst ab – der Installer läuft nie als root. Prüfung überspringen:
-`CC_PICKER_NO_DEPS=1 ./install.sh`.
+selbst ab – der Installer läuft nie als root. Automatische Nachinstallation überspringen:
+`CC_PICKER_NO_DEPS=1 ./install.sh`. Ohne interaktives Terminal wird ebenfalls
+nicht gefragt; der Installer zeigt stattdessen den Installationsbefehl. Erkennt
+er keinen unterstützten Paketmanager, gibt er einen Hinweis zur manuellen Installation.
 
 Dialog-Programm von Hand installieren:
 
