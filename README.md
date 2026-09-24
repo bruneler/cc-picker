@@ -226,6 +226,10 @@ CC_PICKER_BASE=~/projects CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 
 ## Dependencies
 
+One Bash script. No framework, runtime service or background daemon. Uses standard Linux tools and your existing Claude Code installation.
+
+Standard tools include GNU coreutils, `find`, `sort`, `sed`, `grep` and `awk`.
+
 | What | Needed for | Notes |
 |---|---|---|
 | `bash` | everything | preinstalled on virtually every Linux system |
@@ -236,7 +240,7 @@ CC_PICKER_BASE=~/projects CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 | `fzf` | optional | searchable terminal menu |
 | `xdg-open` | optional | "Open in file manager" (part of `xdg-utils`, usually preinstalled) |
 
-**`install.sh` checks all of this for you.** If no dialog tool is found, it
+**`install.sh` checks the main dependencies.** If no dialog tool is found, it
 offers to install one (`kdialog` on KDE, `zenity` elsewhere) and shows the
 exact command before running anything:
 

@@ -229,6 +229,10 @@ CC_PICKER_BASE=~/projekte CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 
 ## Abhängigkeiten
 
+Ein Bash-Skript. Kein Framework, Laufzeitdienst oder Hintergrundprozess. Nutzt übliche Linux-Werkzeuge und deine vorhandene Claude-Code-Installation.
+
+Dazu gehören GNU coreutils sowie `find`, `sort`, `sed`, `grep` und `awk`.
+
 | Was | Wofür | Hinweis |
 |---|---|---|
 | `bash` | alles | auf praktisch jedem Linux vorinstalliert |
@@ -239,7 +243,7 @@ CC_PICKER_BASE=~/projekte CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 | `fzf` | optional | durchsuchbares Terminal-Menü |
 | `xdg-open` | optional | „Im Dateimanager öffnen“ (aus `xdg-utils`, meist vorinstalliert) |
 
-**`install.sh` prüft das alles für dich.** Fehlt ein Dialog-Programm, bietet
+**`install.sh` prüft die wichtigsten Abhängigkeiten.** Fehlt ein Dialog-Programm, bietet
 es an, eines zu installieren (`kdialog` unter KDE, sonst `zenity`), und zeigt
 vorher den genauen Befehl:
 

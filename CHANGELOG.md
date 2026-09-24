@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+- Security policy with a private reporting contact and supported versions
+- Security regression tests for shell metacharacters and path handling
+
+### Changed
+- Clarify runtime dependencies on the website and in both READMEs
+
 ### Fixed
 - `--update` no longer prints Git's "detached HEAD" advice
 

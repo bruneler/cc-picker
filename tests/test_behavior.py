@@ -1,9 +1,11 @@
 """End-to-end checks with disposable homes and a fake Claude executable."""
 import os
+import json
 from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -131,6 +133,132 @@ class Behavior(unittest.TestCase):
         self.run_picker('1\n')
         self.assertFalse((self.home/'unsafe').exists())
         self.assertEqual(self.marker.read_text().strip(), str(self.base/'chosen'))
+
+    # These payloads must remain data across argv, bash -c and state files.
+    # If evaluated, the substitutions create a marker inside the disposable home.
+    def security_name(self):
+        self.env['TEST_SENTINEL'] = str(Path(self.temp.name) / 'unexpected-execution')
+        return 'project $(touch${IFS}$TEST_SENTINEL) `touch${IFS}$TEST_SENTINEL` ;& \'" $ \\ end'
+
+    def assert_no_execution(self):
+        self.assertFalse(Path(self.env['TEST_SENTINEL']).exists())
+
+    def test_security_create_and_recent_preserve_metacharacters(self):
+        name = self.security_name()
+        self.run_picker('1\n' + name + '\n\n')
+        self.assertTrue((self.base / name).is_dir())
+        self.assertEqual(self.launched(), str(self.base / name))
+        self.marker.unlink()
+        self.run_cmd('--shell-mode', '-')
+        self.assertEqual(self.launched(), str(self.base / name))
+        self.assert_no_execution()
+
+    def test_security_all_terminals_preserve_command_and_directory(self):
+        name = self.security_name()
+        project = self.base / name
+        project.mkdir()
+        # Executable paths also exercise Bash's ANSI-C quoting for controls.
+        binary = self.home / ('claude ' + name + '\t\n\x1b')
+        shutil.copy(self.env['CC_PICKER_BIN'], binary)
+        shell = self.home / ('shell ' + name + '\t\n\x1b')
+        shutil.copy('/bin/true', shell)
+        self.env.update(CC_PICKER_BIN=str(binary), CC_PICKER_SHELL=str(shell))
+        log = self.home / 'terminal-argv'
+        self.env['TEST_TERMINAL_LOG'] = str(log)
+        terminal = '#!' + sys.executable + '\n' + '''import json, os, sys
+args = sys.argv[1:]
+with open(os.environ['TEST_TERMINAL_LOG'], 'w') as f:
+    json.dump(args, f)
+if args[0].startswith('--working-directory='):
+    os.chdir(args.pop(0).split('=', 1)[1])
+elif args[0] in ('--workdir', '--working-directory', '--directory'):
+    os.chdir(args[1]); del args[:2]
+if args[0] in ('--', '-e', '-x'):
+    args.pop(0)
+os.execvp(args[0], args)
+'''
+        prefixes = {
+            'gnome-terminal': ['--working-directory=' + str(project), '--'],
+            'konsole': ['--workdir', str(project), '-e'],
+            'xfce4-terminal': ['--working-directory=' + str(project), '-x'],
+            'alacritty': ['--working-directory', str(project), '-e'],
+            'kitty': ['--directory', str(project)],
+            'xterm': ['-e'],
+        }
+        for tool, prefix in prefixes.items():
+            with self.subTest(terminal=tool):
+                self.write_tool(tool, terminal)
+                self.env['CC_PICKER_TERMINAL'] = tool
+                self.run_gui('p0')
+                self.assertEqual(self.launched(), str(project))
+                argv = json.loads(log.read_text())
+                self.assertEqual(argv[:-1], prefix + ['bash', '-c'])
+                self.assertEqual(self.claude_args(), [])
+                self.assert_no_execution()
+                self.marker.unlink()
+
+    def test_security_clone_passes_literal_url_after_option_separator(self):
+        name = self.security_name()
+        log = self.home / 'clone-argv'
+        self.env['TEST_CLONE_LOG'] = str(log)
+        self.write_tool('git', '#!/bin/bash\n'
+                        'if [ "$1" = clone ]; then\n'
+                        '  printf "%s\\0" "$@" > "$TEST_CLONE_LOG"\n'
+                        '  exit 1\nfi\nexit 0\n')
+        for url in (name + '\t\x1b', '--upload-pack=' + name):
+            with self.subTest(url=url):
+                self.run_picker('1\n' + name + '\n' + url + '\n')
+                self.assertEqual(log.read_bytes().split(b'\0')[:-1],
+                                 [s.encode() for s in ('clone', '--', url, str(self.base / name))])
+                self.assertFalse((self.base / name).exists())
+                self.assertIsNone(self.launched())
+                self.assert_no_execution()
+
+    def test_security_rename_archive_restore_preserve_paths_and_contents(self):
+        name = self.security_name()
+        original = self.base / name
+        original.mkdir()
+        (original / 'keep.txt').write_text('keep me')
+        self.run_cmd('--shell-mode', name)
+        renamed = self.base / ('renamed ' + name)
+        self.run_gui('manage', 'p0', 'rename', renamed.name, '__cancel__')
+        self.assertFalse(original.exists())
+        self.run_cmd('--shell-mode', '-')
+        self.assertEqual(self.launched(), str(renamed))
+        self.run_gui('manage', 'p0', 'archive', 'yes', '__cancel__')
+        self.assertFalse(renamed.exists())
+        self.assertEqual((self.base / '.archive' / renamed.name / 'keep.txt').read_text(), 'keep me')
+        self.run_gui('manage', 'restore', 'a0', '__cancel__')
+        self.assertEqual((renamed / 'keep.txt').read_text(), 'keep me')
+        self.assert_no_execution()
+
+    def test_security_known_config_values_are_literal(self):
+        name = self.security_name()
+        base = self.home / name
+        (base / 'chosen').mkdir(parents=True)
+        binary = self.home / ('bin ' + name)
+        shutil.copy(self.env['CC_PICKER_BIN'], binary)
+        config = self.home / '.config/cc-picker/config'
+        config.parent.mkdir(parents=True)
+        config.write_text('CC_PICKER_BASE=' + str(base) + '\n'
+                          'CC_PICKER_BIN=' + str(binary) + '\n'
+                          'CC_PICKER_SESSION=' + name + '\n')
+        del self.env['CC_PICKER_BASE'], self.env['CC_PICKER_BIN']
+        self.run_cmd('--shell-mode', 'chosen')
+        self.assertEqual(self.launched(), str(base / 'chosen'))
+        self.assert_no_execution()
+
+    def test_security_control_characters_rejected_and_existing_paths_skipped(self):
+        for control in ('\t', '\r', '\x1b', '\x7f'):
+            with self.subTest(control=repr(control)):
+                self.run_picker('1\nbad' + control + 'name\n')
+                self.assertEqual(list(self.base.iterdir()), [])
+                self.assertIsNone(self.launched())
+        for control in ('\t', '\r', '\n', '\x1b', '\x7f'):
+            (self.base / ('bad' + control + 'name')).mkdir()
+        (self.base / 'good').mkdir()
+        self.run_picker('1\n')
+        self.assertEqual(self.launched(), str(self.base / 'good'))
 
     def test_installer_and_desktop_launch_with_special_path(self):
         from gi.repository import Gio
