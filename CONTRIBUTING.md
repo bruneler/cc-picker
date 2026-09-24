@@ -65,3 +65,8 @@ access. Pull requests and tags never deploy. The public `release-info.json`
 identifies the live source commit. Use the `lint` workflow's manual main run to
 retry; obsolete runs are skipped. Changes to deployment access and recovery are
 maintained in bruneler/bruenus-infrastructure (ADR 0015).
+
+## Security reports
+
+Please follow [SECURITY.md](SECURITY.md) to report vulnerabilities privately.
+Do not include secrets or personal project data in issues or pull requests.
