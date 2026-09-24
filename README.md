@@ -86,6 +86,22 @@ optionally via `git clone`) → Claude Code starts right there.
 | ⚙️ **No hard-coded paths** | everything configurable via a config file or environment variables |
 | 🧩 **Desktop integration** | its own icon in your application menu |
 
+## Linux distributions
+
+- **Arch Linux:** fully tested by the maintainer on their own system.
+- **Debian:** confirmed working by the maintainer.
+- **Ubuntu:** automated checks and functional tests run on GitHub Actions
+  (`ubuntu-latest`), using isolated test environments without real Claude sessions.
+  This is not a full desktop end-to-end test.
+- **Linux Mint, Manjaro, Fedora and openSUSE:** expected to work with the
+  dependencies below, but not yet verified by dedicated distribution tests.
+  The installer recognises `apt-get`, `pacman`, `dnf` and `zypper`.
+
+Requires Bash 4 or newer, GNU/Linux tools and a working Claude Code installation.
+The graphical picker additionally needs `zenity`, `kdialog` or `yad` and a
+supported terminal emulator. No particular desktop environment is required for
+terminal mode. Distribution versions have not yet been recorded in a test matrix.
+
 ## Installation
 
 ```bash
