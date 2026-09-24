@@ -3,6 +3,10 @@ name: lint
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   shellcheck:
@@ -12,7 +16,7 @@ jobs:
       - name: Syntax check
         run: bash -n cc-picker.sh install.sh
       - name: ShellCheck
-        run: shellcheck cc-picker.sh install.sh
+        run: shellcheck cc-picker.sh install.sh scripts/deploy-website.sh
       - name: Smoke test
         run: |
           ./cc-picker.sh --version
@@ -22,3 +26,23 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y python3-gi desktop-file-utils
       - name: Functional tests (isolated homes, no real Claude sessions)
         run: /usr/bin/python3 -m unittest discover -s tests -v
+
+  deploy-website:
+    name: Deploy cc-picker website
+    needs: shellcheck
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    concurrency:
+      group: cc-picker-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Publish verified main revision
+        env:
+          DEPLOY_KEY: ${{ secrets.CC_PICKER_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ vars.CC_PICKER_KNOWN_HOSTS }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/deploy-website.sh
