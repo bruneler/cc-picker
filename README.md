@@ -72,8 +72,15 @@ optionally via `git clone`) → Claude Code starts right there.
 | | |
 |---|---|
 | 🪟 **GUI or shell** | window by default, terminal menu via `--shell-mode`; GUI works with `zenity` (GNOME & most desktops), `kdialog` (KDE) or `yad` |
-| 🕘 **Recent first** | recently used projects are listed at the top, with "last used" times |
-| ➕ **New project** | create one straight from the picker, optionally by cloning a Git remote |
+| 🕘 **Recent first** | recently used projects are listed at the top, with "last used" times; pinned favourites stay above them |
+| ↩️ **Continue where you left off** | start a new Claude Code session, continue the last one or pick an earlier one |
+| 🔎 **Search** | type part of a name to filter the list; uses `fzf` in the terminal menu if it's installed |
+| ⚡ **Straight from the command line** | `cc-picker my-app` or `cc-picker -` (last project) – no list at all |
+| 🌿 **Git status at a glance** | branch and number of changed files next to each project |
+| ➕ **New project** | create one straight from the picker: from a template (with `git init` and a prepared `CLAUDE.md`), or by cloning a Git remote – `user/repo` is enough for GitHub |
+| 🗂️ **Manage projects** | open in file manager or editor, pin, rename, archive and restore |
+| 📁 **Several projects folders** | e.g. `~/claude-projects` and `~/code` in one list |
+| ⬆️ **Self-update** | `cc-picker --update` installs the newest version |
 | 🔍 **Auto-detection** | `claude` binary (PATH, then common install locations), terminal emulator (gnome-terminal, konsole, xfce4-terminal, alacritty, kitty, xterm) and your login shell (bash, zsh, fish, …) |
 | 🌐 **English & German** | UI language follows your system locale (`$LANG`) |
 | ⚙️ **No hard-coded paths** | everything configurable via a config file or environment variables |
@@ -96,6 +103,7 @@ The installer sets up:
 | `~/.local/bin/cc-picker` | the executable script |
 | `~/.local/share/applications/cc-picker.desktop` | application menu entry |
 | `~/.local/share/icons/cc-picker.svg` | app icon |
+| `~/.config/cc-picker/templates/` | project templates – installed once, your changes are kept |
 
 **PATH is set up automatically:** if `~/.local/bin` isn't in your `PATH`
 yet, `install.sh` detects your login shell and adds the matching line –
@@ -118,17 +126,67 @@ is then only printed, not written.
 ```bash
 cc-picker                # project list (window)
 cc-picker --shell-mode   # terminal menu
+cc-picker my-app         # start right in project "my-app" (a unique beginning is enough)
+cc-picker -              # start in the most recently used project
+cc-picker -c my-app      # … and continue the last session there
+cc-picker --update       # update to the newest version
 cc-picker --help         # usage, projects folder and config file
 cc-picker --version      # show the version
 ```
 
 Or search for **cc-picker** in your application menu.
 
-1. Pick a project – recently used ones are at the top – or
-   **"+ Create new project"** (enter a name, optionally a Git remote URL to
-   clone; a progress indicator shows while cloning)
-2. A terminal opens in the chosen folder and starts `claude`.
+1. Pick a project – pinned (★) and recently used ones are at the top – or
+   **"+ Create new project"** (see below)
+2. If Claude Code has been used in that project before, you choose:
+   **new session**, **continue last session** (`claude --continue`) or
+   **choose an earlier session** (`claude --resume`). Set
+   `CC_PICKER_SESSION` to skip the question, or pass `-n`, `-c` or `-r`.
+3. A terminal opens in the chosen folder and starts `claude`.
    When you quit Claude Code, the shell stays open in the project folder.
+
+**Searching:** in the terminal menu, type part of a name instead of a number
+to filter the list (an empty line shows everything again). If
+[`fzf`](https://github.com/junegunn/fzf) is installed, the menu uses it
+instead (`CC_PICKER_FZF=0` turns that off). In the window, a **Search …**
+entry appears once you have 8 or more projects.
+
+**Git status:** for Git repositories, the list shows the branch and the
+number of changed files, e.g. `main · 3 changed`. `CC_PICKER_GIT_STATUS=0`
+turns this off (for very large repositories).
+
+### New projects
+
+Enter a name, then either
+
+- a Git URL to clone – for GitHub, `user/repo` is enough – or
+- nothing, and pick a **template** or an **empty folder**.
+
+Templates are folders in `~/.config/cc-picker/templates/`. Their contents are
+copied into the new project, `{{PROJECT_NAME}}` in text files is replaced
+with the project's name, and `git init` is run. `install.sh` sets up a
+`standard` template with a `CLAUDE.md` and a `.gitignore`; edit it or add
+your own. Without any templates, the question is skipped.
+
+### Managing projects
+
+**⚙ Manage projects …** in the list lets you, for one project:
+
+- open it in the file manager or in your editor (`CC_PICKER_EDITOR`, or
+  the first of `code`, `codium`, `zed`, `subl` that's installed)
+- pin it, so it's always listed first (★)
+- rename it
+- archive it: the folder is moved to `.archive/` inside the projects folder
+  – nothing is deleted – and can be restored from the same menu
+
+Claude Code keeps its session history per folder path, so after renaming, the
+old sessions can't be continued from the new name.
+
+### Updating
+
+`cc-picker --update` fetches the newest release from GitHub and runs its
+`install.sh`, if it's newer than the installed version. Your settings,
+templates and project list are kept.
 
 ## Configuration
 
@@ -147,13 +205,18 @@ The file is only read, never executed, and only the keys below are used:
 
 | Variable             | Default                        | Meaning                                          |
 |----------------------|--------------------------------|--------------------------------------------------|
-| `CC_PICKER_BASE`     | `~/claude-projects`            | folder where projects are listed and created     |
+| `CC_PICKER_BASE`     | `~/claude-projects`            | projects folder; several separated by `:` (e.g. `~/claude-projects:~/code`) – new projects go into the first |
 | `CC_PICKER_BIN`      | auto-detected                  | path to the `claude` binary                      |
 | `CC_PICKER_TERMINAL` | auto-detected                  | terminal emulator to use                         |
 | `CC_PICKER_SHELL`    | auto-detected (`/etc/passwd`)  | shell that keeps running after Claude Code exits |
 | `CC_PICKER_LANG`     | from `$LANG`                   | UI language: `de…` = German, otherwise English   |
 | `CC_PICKER_DIALOG`   | auto-detected                  | dialog tool: `zenity`, `kdialog` or `yad`        |
 | `CC_PICKER_MODE`     | `gui`                          | what `cc-picker` opens: `gui` (project list), `shell` (terminal menu) or `ask` |
+| `CC_PICKER_SESSION`  | `ask`                          | for projects with earlier sessions: `ask`, `new`, `continue` or `resume` |
+| `CC_PICKER_GIT_STATUS` | `1`                          | `0` hides branch and changes in the list         |
+| `CC_PICKER_EDITOR`   | auto-detected                  | graphical editor for "Open in editor", e.g. `code -n` |
+| `CC_PICKER_FZF`      | `1`                            | `0` uses the numbered terminal menu even if `fzf` is installed |
+| `CC_PICKER_UPDATE_REPO` | this repository             | Git repository used by `--update` (for forks)    |
 
 One-off example via environment variables:
 
@@ -169,7 +232,9 @@ CC_PICKER_BASE=~/projects CC_PICKER_BIN=/opt/claude/bin/claude cc-picker
 | [`claude`](https://claude.com/product/claude-code) | everything | the Claude Code CLI |
 | a dialog tool | GUI mode & app-menu launch | any one of `zenity`, `kdialog`, `yad` – most desktops ship one |
 | a terminal emulator | GUI mode | gnome-terminal, konsole, xfce4-terminal, alacritty, kitty or xterm |
-| `git` | optional | only for cloning when creating a new project |
+| `git` | optional | cloning, `git init` for templates, Git status in the list, `--update` |
+| `fzf` | optional | searchable terminal menu |
+| `xdg-open` | optional | "Open in file manager" (part of `xdg-utils`, usually preinstalled) |
 
 **`install.sh` checks all of this for you.** If no dialog tool is found, it
 offers to install one (`kdialog` on KDE, `zenity` elsewhere) and shows the
@@ -212,8 +277,9 @@ Your project folders are left untouched. If `install.sh` added a PATH entry
 (marked `# added by cc-picker install.sh`), you can remove it from your shell
 config if you like.
 
-Settings and the list of recently used projects live in two small local
-files – nothing is sent anywhere. To remove them as well:
+Settings, templates, the list of recently used projects and the pinned
+projects live in small local files – nothing is sent anywhere. To remove
+them as well:
 
 ```bash
 rm -r ~/.config/cc-picker ~/.local/state/cc-picker

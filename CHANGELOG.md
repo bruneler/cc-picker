@@ -2,8 +2,44 @@
 
 ## Unreleased
 
+## [0.3.0] – 2026-09-24
+
+### Added
+- Continue where you left off: for projects with earlier Claude Code
+  sessions, choose a new session, `claude --continue` or `claude --resume`
+  (`CC_PICKER_SESSION`, `-n`/`-c`/`-r`)
+- Start from the command line without a list: `cc-picker NAME` (a unique
+  beginning is enough) and `cc-picker -` for the most recent project
+- Search: type text in the terminal menu to filter it, `fzf` is used when
+  installed (`CC_PICKER_FZF`); the window gets a search entry from 8 projects
+- Git branch and number of changed files next to each project
+  (`CC_PICKER_GIT_STATUS`)
+- Pin favourite projects so they're always listed first
+- Several projects folders in `CC_PICKER_BASE`, separated by `:`
+- Project templates in `~/.config/cc-picker/templates/` with
+  `{{PROJECT_NAME}}` placeholders and `git init`; `install.sh` sets up a
+  `standard` template with `CLAUDE.md` and `.gitignore`
+- GitHub shorthand `user/repo` when cloning
+- "Manage projects": open in file manager or editor (`CC_PICKER_EDITOR`),
+  pin, rename, archive and restore
+- `cc-picker --update` installs the newest release
+- Functional tests for all of the above, including the window mode with a
+  fake dialog tool
+
+### Changed
+- The recent list stores full paths; entries from 0.2 are still read
+- Creating a project with an existing name is refused instead of reusing
+  the folder
+- The terminal menu lists one project per line and stays open after
+  managing a project or cancelling a new one
+
+### Fixed
 - Quote desktop launcher paths correctly, including spaces and special characters.
-- Add isolated functional tests to CI and separate Git options from clone URLs.
+- Separate Git options from clone URLs.
+- Website: no horizontal scrolling on phones.
+
+### Other
+- Add isolated functional tests to CI.
 - Version the website with local fonts and cc-picker.brue.nu metadata.
 
 All notable changes to cc-picker are documented here.
@@ -66,4 +102,5 @@ First public release.
 
 Initial version, not released.
 
+[0.3.0]: https://github.com/bruneler/cc-picker/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bruneler/cc-picker/releases/tag/v0.2.0
