@@ -88,7 +88,8 @@ optionally via `git clone`) → Claude Code starts right there.
 
 ## Linux distributions
 
-- **Arch Linux and Debian:** confirmed working by the maintainer.
+- **Arch Linux:** fully tested by the maintainer on their own system.
+- **Debian:** confirmed working by the maintainer.
 - **Ubuntu:** automated checks and functional tests run on GitHub Actions
   (`ubuntu-latest`), using isolated test environments without real Claude sessions.
   This is not a full desktop end-to-end test.

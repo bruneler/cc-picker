@@ -90,7 +90,8 @@ anlegen, optional mit `git clone`) → Claude Code startet direkt dort.
 
 ## Linux-Distributionen
 
-- **Arch Linux und Debian:** vom Maintainer im Einsatz bestätigt.
+- **Arch Linux:** vom Maintainer auf dem eigenen System vollständig getestet.
+- **Debian:** vom Maintainer im Einsatz bestätigt.
 - **Ubuntu:** automatisierte Prüfungen und Funktionstests laufen auf GitHub Actions
   (`ubuntu-latest`), mit isolierten Testumgebungen ohne echte Claude-Sitzungen.
   Das ist kein vollständiger Desktop-End-to-End-Test.
