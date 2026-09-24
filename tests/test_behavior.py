@@ -117,7 +117,8 @@ class Behavior(unittest.TestCase):
         self.assertEqual(self.marker.read_text().strip(), str(self.base/'good'))
 
     def test_failed_clone_does_not_launch(self):
-        self.run_picker('1\nclone-failure\n/definitely-missing-cc-picker-repository\n')
+        r = self.run_picker('1\nclone-failure\n/definitely-missing-cc-picker-repository\n')
+        self.assertIn('git clone failed: /definitely-missing-cc-picker-repository', r.stderr)
         self.assertFalse(self.marker.exists())
         self.assertFalse((self.base/'clone-failure').exists())
 
@@ -502,6 +503,16 @@ os.execvp(args[0], args)
         self.run_gui('new', 'fresh', '', 't0')
         self.assertEqual((self.base/'fresh/README.md').read_text(), 'fresh')
         self.assertEqual(self.launched(), str(self.base/'fresh'))
+
+    def test_gui_failed_clone_shows_error(self):
+        # answers: list, name, URL, the busy indicator, then cancel the list
+        self.run_gui('new', 'broken', '/definitely-missing-cc-picker-repository',
+                     'busy', '__cancel__')
+        self.assertIsNone(self.launched())
+        self.assertFalse((self.base/'broken').exists())
+        error = [l for l in self.dialog_log.read_text().splitlines() if '--error' in l]
+        self.assertEqual(len(error), 1)
+        self.assertIn('git clone failed: /definitely-missing-cc-picker-repository', error[0])
 
     def test_gui_rename_then_start(self):
         (self.base/'alpha').mkdir()
