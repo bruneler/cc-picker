@@ -56,3 +56,12 @@ them on every push and pull request.
 The published static website is in `website/`. It needs no build step. Keep
 fonts and their license together, and exclude design drafts and source-only
 preview generators. Production hosting is maintained in the infrastructure repo.
+
+## Website deployment
+
+Successful main CI runs publish `website/` to https://cc-picker.brue.nu/.
+The dependent deployment job uses a dedicated restricted SSH key; no admin VPS
+access. Pull requests and tags never deploy. The public `release-info.json`
+identifies the live source commit. Use the `lint` workflow's manual main run to
+retry; obsolete runs are skipped. Changes to deployment access and recovery are
+maintained in bruneler/bruenus-infrastructure (ADR 0015).
