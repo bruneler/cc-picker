@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Explain website consent storage and cookie durations in plain language in German and English
+
 ## [0.3.1] – 2026-09-24
 
 ### Added
