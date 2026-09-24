@@ -235,6 +235,11 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
   html { scroll-behavior: auto; }
   .folder, .btn { transition: none; }
 }
+.analytics-panel { padding: 22px; margin-block: 20px; border: 2px solid var(--line); border-radius: 12px; }
+.analytics-panel[hidden], [data-analytics-settings][hidden] { display: none; }
+.analytics-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 16px; }
+.analytics-actions button, [data-analytics-settings] { font: inherit; cursor: pointer; padding: 10px 16px; border: 1px solid currentColor; border-radius: 6px; background: var(--bg); color: var(--ink); }
+.analytics-actions button:focus-visible, [data-analytics-settings]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 </style>
 </head>
 <body data-level="plain">
@@ -494,10 +499,21 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
   </section>
   </main>
 
+  <section class="analytics-panel" data-analytics-panel aria-labelledby="analytics-title" hidden>
+    <h2 id="analytics-title" data-analytics-text="title">Optional visitor statistics</h2>
+    <p data-analytics-text="info"></p>
+    <p data-analytics-status aria-live="polite"></p>
+    <div class="analytics-actions">
+      <button type="button" data-analytics-choice="denied" data-analytics-text="deny">Do not allow</button>
+      <button type="button" data-analytics-choice="granted" data-analytics-text="allow">Allow</button>
+    </div>
+    <a href="privacy.html" data-analytics-text="details">Privacy details</a>
+  </section>
   <footer>
     <nav aria-label="Links">
       <span>cc-picker 0.3.0</span>
       <a href="privacy.html">Datenschutz / Privacy</a>
+      <button type="button" data-analytics-settings data-analytics-text="settings" hidden>Privacy settings</button>
       <a href="https://github.com/bruneler/cc-picker">GitHub</a>
       <a href="https://github.com/bruneler/cc-picker/blob/main/CHANGELOG.md">Changelog</a>
       <a href="https://github.com/bruneler/cc-picker/blob/main/LICENSE" data-t="license">MIT license</a>
@@ -753,5 +769,6 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
   applyLang(lang);
 })();
 </script>
+<script src="analytics.js" defer></script>
 </body>
 </html>
