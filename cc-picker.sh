@@ -8,11 +8,14 @@
 #
 # Flow: load config → pick UI language → parse options → detect claude,
 # dialog tool, terminal and shell → show the project list (window or
-# terminal menu) → open a terminal in the chosen folder and start claude.
+# terminal menu), or resolve a project given on the command line → ask
+# whether to continue an earlier Claude session → open a terminal in the
+# chosen folder and start claude.
 #
 # Convention: functions return values on stdout, which callers capture with
 # $(...). All messages, prompts and git output must therefore go to stderr,
-# or they would end up in the returned value.
+# or they would end up in the returned value. Functions that fill the P_*
+# arrays must run in the current shell, never inside $(...).
 #
 # The translated T_* messages are our own constants; some are used as printf
 # format strings on purpose (they contain %s/%d placeholders).
@@ -20,11 +23,30 @@
 
 set -euo pipefail
 
-VERSION="0.2.0"
+VERSION="0.3.0"
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
-CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/cc-picker/config"
-RECENT_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/cc-picker/recent"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/cc-picker"
+CONFIG_FILE="$CONFIG_DIR/config"
+TEMPLATE_DIR="$CONFIG_DIR/templates"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/cc-picker"
+RECENT_FILE="$STATE_DIR/recent"
+PINNED_FILE="$STATE_DIR/pinned"
 RECENT_MAX=50
+ARCHIVE_NAME=".archive"
+# The window list offers a search entry from this many projects on
+SEARCH_MIN=8
+
+# expand_home <path> — expands a leading ~/ or $HOME/ by hand (matched
+# literally on purpose, the config file is never evaluated)
+# shellcheck disable=SC2088
+expand_home() {
+    case "$1" in
+        "~")        printf '%s' "$HOME" ;;
+        "~/"*)      printf '%s' "$HOME/${1#\~/}" ;;
+        "\$HOME/"*) printf '%s' "$HOME/${1#\$HOME/}" ;;
+        *)          printf '%s' "$1" ;;
+    esac
+}
 
 # --- Config file: KEY=VALUE lines, environment variables take precedence ---
 # Parsed, not sourced, and limited to known CC_PICKER_* keys.
@@ -35,6 +57,7 @@ load_config() {
         key="${key//[[:space:]]/}"
         case "$key" in
             CC_PICKER_BASE|CC_PICKER_BIN|CC_PICKER_TERMINAL|CC_PICKER_SHELL|CC_PICKER_LANG|CC_PICKER_DIALOG|CC_PICKER_MODE) ;;
+            CC_PICKER_SESSION|CC_PICKER_GIT_STATUS|CC_PICKER_EDITOR|CC_PICKER_FZF|CC_PICKER_UPDATE_REPO) ;;
             *) continue ;;
         esac
         [ -n "${!key:-}" ] && continue
@@ -42,48 +65,104 @@ load_config() {
         value="${value%"${value##*[![:space:]]}"}"
         value="${value#[\"\']}"
         value="${value%[\"\']}"
-        # Expand a leading ~/ or $HOME/ by hand (matched literally on purpose)
-        # shellcheck disable=SC2088
-        case "$value" in
-            "~/"*)      value="$HOME/${value#\~/}" ;;
-            "\$HOME/"*) value="$HOME/${value#\$HOME/}" ;;
-        esac
+        value="$(expand_home "$value")"
         printf -v "$key" '%s' "$value"
     done < "$CONFIG_FILE"
 }
 load_config
 
-BASE="${CC_PICKER_BASE:-$HOME/claude-projects}"
+# Projects folders: CC_PICKER_BASE may list several, separated by ":".
+# New projects are created in the first one.
+BASES=()
+IFS=':' read -ra _bases <<< "${CC_PICKER_BASE:-$HOME/claude-projects}"
+for _b in "${_bases[@]}"; do
+    _b="$(expand_home "$_b")"
+    [ "$_b" = "/" ] || _b="${_b%/}"
+    [ -n "$_b" ] && BASES+=("$_b")
+done
+[ "${#BASES[@]}" -gt 0 ] || BASES=("$HOME/claude-projects")
+BASE="${BASES[0]}"
+unset _b _bases
+
 START_MODE="${CC_PICKER_MODE:-gui}"
+SESSION_MODE="${CC_PICKER_SESSION:-ask}"
+GIT_STATUS="${CC_PICKER_GIT_STATUS:-1}"
+USE_FZF="${CC_PICKER_FZF:-1}"
+UPDATE_REPO="${CC_PICKER_UPDATE_REPO:-https://github.com/bruneler/cc-picker.git}"
 
 # --- UI language: German for de_* locales, English otherwise ---
 UI_LANG="${CC_PICKER_LANG:-${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}}"
 case "$UI_LANG" in
     de*)
         T_NEW_ENTRY="+ Neues Projekt erstellen"
+        T_MANAGE_ENTRY="⚙ Projekte verwalten …"
+        T_SEARCH_ENTRY="⌕ Suchen …"
+        T_SHOW_ALL="× Alle Projekte zeigen"
         T_NO_CLAUDE="claude wurde nicht gefunden. Bitte CC_PICKER_BIN setzen oder claude installieren."
         T_NO_TERMINAL="Kein unterstütztes Terminal gefunden. Bitte CC_PICKER_TERMINAL setzen."
         T_NEW_TITLE="Neues Projekt"
         T_NEW_NAME="Name des neuen Projektordners:"
         T_BAD_NAME="Ungültiger Name. Erlaubt ist ein einfacher Ordnername: kein '/', keine Tabulatoren oder Zeilenumbrüche, nicht mit '.' oder '-' beginnend, keine Leerzeichen am Anfang oder Ende."
+        T_EXISTS="Es gibt schon einen Ordner namens %s."
         T_CLONE_TITLE="Git-Repo (optional)"
-        T_CLONE_GUI="Git-Remote-URL zum Klonen, oder leer lassen für leeren Ordner:"
-        T_CLONE_SHELL="Git-Remote-URL zum Klonen (leer lassen für leeren Ordner):"
+        T_CLONE_GUI="Git-Remote-URL oder GitHub-Kurzform (benutzer/repo) zum Klonen, oder leer lassen für ein neues Projekt:"
+        T_CLONE_SHELL="Git-URL oder benutzer/repo zum Klonen (leer lassen für ein neues Projekt):"
         T_CLONING="Klone %s …"
         T_CLONE_FAIL="git clone ist fehlgeschlagen:"
+        T_TEMPLATE_TEXT="Womit soll das neue Projekt starten?"
+        T_COL_TEMPLATE="Vorlage"
+        T_TEMPLATE_EMPTY="Leerer Ordner"
+        T_TEMPLATE_ITEM="Vorlage: %s"
         T_PICK_PROJECT="In welchem Projekt starten?"
         T_COL_PROJECT="Projekt"
         T_COL_LAST="Zuletzt"
-        T_SHELL_HEADER="cc-picker — Projekt wählen:"
+        T_COL_GIT="Git"
+        T_GIT_CHANGED="%d geändert"
+        T_GIT_DETACHED="abgekoppelt"
+        T_SHELL_HEADER="cc-picker — Projekt wählen (Nummer, oder Text zum Filtern):"
         T_INVALID="Ungültige Auswahl, nochmal."
+        T_NO_MATCH='Nichts passt zu „%s“.'
+        T_SEARCH_TITLE="Suchen"
+        T_SEARCH_TEXT="Teil des Projektnamens:"
         T_PICK_MODE="Wie möchtest du das Projekt auswählen?"
         T_COL_MODE="Modus"
         T_MODE_GUI="Projektliste (Fenster)"
         T_MODE_SHELL="Terminal-Menü"
+        T_SESSION_TEXT="Wie soll Claude Code in %s starten?"
+        T_COL_START="Start"
+        T_SESSION_NEW="Neue Sitzung"
+        T_SESSION_CONTINUE="Letzte Sitzung fortsetzen"
+        T_SESSION_RESUME="Frühere Sitzung auswählen"
+        T_MANAGE_PICK="Welches Projekt möchtest du verwalten?"
+        T_MANAGE_TEXT="Was soll mit %s passieren?"
+        T_COL_ACTION="Aktion"
+        T_ACT_FILES="Im Dateimanager öffnen"
+        T_ACT_EDITOR="Im Editor öffnen (%s)"
+        T_ACT_PIN="Anheften (steht dann immer oben)"
+        T_ACT_UNPIN="Nicht mehr anheften"
+        T_ACT_RENAME="Umbenennen"
+        T_ACT_ARCHIVE="Archivieren"
+        T_ACT_RESTORE="Archiviertes Projekt wiederherstellen …"
+        T_RENAME_TEXT="Neuer Name für %s:"
+        T_ARCHIVE_ASK='%s archivieren?
+
+Der Ordner wird nach %s verschoben, nicht gelöscht. Zurückholen kannst du ihn unter „Projekte verwalten“.'
+        T_CONFIRM="[j/N] "
+        T_RESTORE_PICK="Welches Projekt wiederherstellen?"
         T_BTN_START="Starten"
         T_BTN_NEXT="Weiter"
+        T_BTN_OK="OK"
         T_BTN_CANCEL="Abbrechen"
         T_BAD_OPTION="Unbekannte Option:"
+        T_TOO_MANY="Zu viele Argumente:"
+        T_NOT_FOUND="Kein Projekt namens %s gefunden."
+        T_AMBIGUOUS="%s passt zu mehreren Projekten:"
+        T_NO_RECENT="Es wurde noch kein Projekt benutzt."
+        T_UPD_NO_GIT="Für --update wird git benötigt."
+        T_UPD_CHECK="Suche nach Updates in %s …"
+        T_UPD_CURRENT="cc-picker %s ist aktuell."
+        T_UPD_INSTALL="Aktualisiere cc-picker %s → %s …"
+        T_UPD_FAIL="Update fehlgeschlagen:"
         T_AGO_NOW="gerade eben"
         T_AGO_MIN="vor %d Min."
         T_AGO_HOUR="vor %d Std."
@@ -92,29 +171,74 @@ case "$UI_LANG" in
         ;;
     *)
         T_NEW_ENTRY="+ Create new project"
+        T_MANAGE_ENTRY="⚙ Manage projects …"
+        T_SEARCH_ENTRY="⌕ Search …"
+        T_SHOW_ALL="× Show all projects"
         T_NO_CLAUDE="claude not found. Please set CC_PICKER_BIN or install claude."
         T_NO_TERMINAL="No supported terminal emulator found. Please set CC_PICKER_TERMINAL."
         T_NEW_TITLE="New project"
         T_NEW_NAME="Name of the new project folder:"
         T_BAD_NAME="Invalid name. Use a plain folder name: no '/', no tabs or line breaks, not starting with '.' or '-', no spaces at the start or end."
+        T_EXISTS="A folder named %s already exists."
         T_CLONE_TITLE="Git repo (optional)"
-        T_CLONE_GUI="Git remote URL to clone, or leave empty for an empty folder:"
-        T_CLONE_SHELL="Git remote URL to clone (leave empty for an empty folder):"
+        T_CLONE_GUI="Git remote URL or GitHub shorthand (user/repo) to clone, or leave empty for a new project:"
+        T_CLONE_SHELL="Git URL or user/repo to clone (leave empty for a new project):"
         T_CLONING="Cloning %s …"
         T_CLONE_FAIL="git clone failed:"
+        T_TEMPLATE_TEXT="What should the new project start with?"
+        T_COL_TEMPLATE="Template"
+        T_TEMPLATE_EMPTY="Empty folder"
+        T_TEMPLATE_ITEM="Template: %s"
         T_PICK_PROJECT="Which project do you want to start in?"
         T_COL_PROJECT="Project"
         T_COL_LAST="Last used"
-        T_SHELL_HEADER="cc-picker — choose a project:"
+        T_COL_GIT="Git"
+        T_GIT_CHANGED="%d changed"
+        T_GIT_DETACHED="detached"
+        T_SHELL_HEADER="cc-picker — choose a project (number, or text to filter):"
         T_INVALID="Invalid choice, try again."
+        T_NO_MATCH='Nothing matches “%s”.'
+        T_SEARCH_TITLE="Search"
+        T_SEARCH_TEXT="Part of the project name:"
         T_PICK_MODE="How do you want to choose the project?"
         T_COL_MODE="Mode"
         T_MODE_GUI="Project list (window)"
         T_MODE_SHELL="Terminal menu"
+        T_SESSION_TEXT="How should Claude Code start in %s?"
+        T_COL_START="Start"
+        T_SESSION_NEW="New session"
+        T_SESSION_CONTINUE="Continue last session"
+        T_SESSION_RESUME="Choose an earlier session"
+        T_MANAGE_PICK="Which project do you want to manage?"
+        T_MANAGE_TEXT="What do you want to do with %s?"
+        T_COL_ACTION="Action"
+        T_ACT_FILES="Open in file manager"
+        T_ACT_EDITOR="Open in editor (%s)"
+        T_ACT_PIN="Pin (always listed first)"
+        T_ACT_UNPIN="Unpin"
+        T_ACT_RENAME="Rename"
+        T_ACT_ARCHIVE="Archive"
+        T_ACT_RESTORE="Restore an archived project …"
+        T_RENAME_TEXT="New name for %s:"
+        T_ARCHIVE_ASK='Archive %s?
+
+The folder is moved to %s, not deleted. You can bring it back under “Manage projects”.'
+        T_CONFIRM="[y/N] "
+        T_RESTORE_PICK="Which project do you want to restore?"
         T_BTN_START="Start"
         T_BTN_NEXT="Next"
+        T_BTN_OK="OK"
         T_BTN_CANCEL="Cancel"
         T_BAD_OPTION="Unknown option:"
+        T_TOO_MANY="Too many arguments:"
+        T_NOT_FOUND="No project named %s found."
+        T_AMBIGUOUS="%s matches several projects:"
+        T_NO_RECENT="No project has been used yet."
+        T_UPD_NO_GIT="--update needs git."
+        T_UPD_CHECK="Checking for updates in %s …"
+        T_UPD_CURRENT="cc-picker %s is up to date."
+        T_UPD_INSTALL="Updating cc-picker %s → %s …"
+        T_UPD_FAIL="Update failed:"
         T_AGO_NOW="just now"
         T_AGO_MIN="%d min ago"
         T_AGO_HOUR="%d h ago"
@@ -124,6 +248,8 @@ case "$UI_LANG" in
 esac
 
 print_usage() {
+    local bases
+    bases="$(IFS=':'; printf '%s' "${BASES[*]}")"
     case "$UI_LANG" in
         de*) cat <<EOF
 cc-picker $VERSION — Projekt wählen und Claude Code darin starten
@@ -131,10 +257,19 @@ cc-picker $VERSION — Projekt wählen und Claude Code darin starten
 Aufruf:
   cc-picker                Projektliste (Fenster)
   cc-picker --shell-mode   Terminal-Menü
+  cc-picker NAME           direkt im Projekt NAME starten
+                           (ein eindeutiger Anfang des Namens genügt)
+  cc-picker -              im zuletzt benutzten Projekt starten
+  cc-picker --update       auf die neueste Version aktualisieren
   cc-picker --help         diese Hilfe
   cc-picker --version      Version anzeigen
 
-Projektordner: $BASE
+Sitzung (sonst wird gefragt, falls es schon eine gibt):
+  -n, --new                neue Sitzung
+  -c, --continue           letzte Sitzung fortsetzen
+  -r, --resume             frühere Sitzung auswählen
+
+Projektordner: $bases
 Konfiguration: $CONFIG_FILE
                (oder Umgebungsvariablen CC_PICKER_*, siehe README)
 EOF
@@ -145,10 +280,19 @@ cc-picker $VERSION — pick a project and launch Claude Code in it
 Usage:
   cc-picker                project list (window)
   cc-picker --shell-mode   terminal menu
+  cc-picker NAME           start right in project NAME
+                           (a unique beginning of the name is enough)
+  cc-picker -              start in the most recently used project
+  cc-picker --update       update to the latest version
   cc-picker --help         show this help
   cc-picker --version      show the version
 
-Projects folder: $BASE
+Session (otherwise you're asked if there already is one):
+  -n, --new                new session
+  -c, --continue           continue the last session
+  -r, --resume             choose an earlier session
+
+Projects folder: $bases
 Config file:     $CONFIG_FILE
                  (or CC_PICKER_* environment variables, see README)
 EOF
@@ -156,14 +300,39 @@ EOF
     esac
 }
 
+usage_error() {
+    echo "cc-picker: $1" >&2
+    print_usage >&2
+    exit 2
+}
+
 SHELL_MODE=0
-case "${1:-}" in
-    "")           ;;
-    --shell-mode) SHELL_MODE=1 ;;
-    -h|--help)    print_usage; exit 0 ;;
-    -V|--version) echo "cc-picker $VERSION"; exit 0 ;;
-    *)            echo "cc-picker: $T_BAD_OPTION $1" >&2; print_usage >&2; exit 2 ;;
-esac
+DO_UPDATE=0
+PROJECT_ARG=""
+HAVE_PROJECT=0
+set_project_arg() {
+    [ "$HAVE_PROJECT" = "0" ] || usage_error "$T_TOO_MANY $1"
+    PROJECT_ARG="$1"
+    HAVE_PROJECT=1
+}
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --shell-mode)  SHELL_MODE=1 ;;
+        -n|--new)      SESSION_MODE="new" ;;
+        -c|--continue) SESSION_MODE="continue" ;;
+        -r|--resume)   SESSION_MODE="resume" ;;
+        --update)      DO_UPDATE=1 ;;
+        -h|--help)     print_usage; exit 0 ;;
+        -V|--version)  echo "cc-picker $VERSION"; exit 0 ;;
+        --)            shift; break ;;
+        -)             set_project_arg - ;;
+        -*)            usage_error "$T_BAD_OPTION $1" ;;
+        *)             set_project_arg "$1" ;;
+    esac
+    shift
+done
+if [ $# -gt 0 ]; then set_project_arg "$1"; fi
+if [ $# -gt 1 ]; then usage_error "$T_TOO_MANY $2"; fi
 
 # --- Dialog tool: zenity (GNOME), kdialog (KDE) or yad, whichever exists ---
 find_dialog() {
@@ -193,43 +362,48 @@ icon_args() {
 # NUL-separated, so option values may contain spaces
 mapfile -d '' ICON_ARGS < <(icon_args)
 
-# dlg_list <text> <ok-label> <column> <item>... — prints the chosen item
-dlg_list() {
+# All list dialogs have a hidden first column with a key (e.g. "p3" for the
+# fourth project, "new", "manage"), so labels never have to be parsed back.
+
+# dlg_menu <text> <ok-label> <column> <key> <label>... — prints the chosen key
+dlg_menu() {
     local text="$1" ok="$2" column="$3"; shift 3
-    local args=() item
     case "$DIALOG" in
-        zenity) zenity --list --title="cc-picker" --text="$text" --column="$column" \
+        zenity) zenity --list --title="cc-picker" --text="$text" \
+                    --column="key" --column="$column" --hide-column=1 --print-column=1 \
                     --ok-label="$ok" --cancel-label="$T_BTN_CANCEL" \
-                    "$@" --height=260 --width=360 ;;
-        yad)    yad --list --title="cc-picker" "${ICON_ARGS[@]}" --text="$text" --column="$column" \
+                    "$@" --height=320 --width=420 ;;
+        yad)    yad --list --title="cc-picker" "${ICON_ARGS[@]}" --text="$text" \
+                    --column="key" --column="$column" --hide-column=1 --print-column=1 \
                     --button="$T_BTN_CANCEL:1" --button="$ok:0" \
-                    "$@" --height=260 --width=360 --print-column=1 --separator="" ;;
-        kdialog)
-            for item in "$@"; do args+=("$item" "$item"); done
-            kdialog --title "cc-picker" "${ICON_ARGS[@]}" \
-                --ok-label "$ok" --cancel-label "$T_BTN_CANCEL" \
-                --menu "$text" "${args[@]}" ;;
+                    "$@" --height=320 --width=420 --separator="" ;;
+        kdialog) kdialog --title "cc-picker" "${ICON_ARGS[@]}" \
+                    --ok-label "$ok" --cancel-label "$T_BTN_CANCEL" \
+                    --menu "$text" "$@" ;;
         *) return 1 ;;
     esac
 }
 
-# dlg_projects <name> <last-used>... — project list with a "last used"
-# column; prints the chosen name
+# dlg_projects <key> <name> <last-used> [<git>]... — the project list; rows
+# have the git column only when SHOW_GIT is 1; prints the chosen key
 dlg_projects() {
-    local args=()
+    local cols=(--column="key" --column="$T_COL_PROJECT" --column="$T_COL_LAST")
+    local args=() n=3 detail
+    [ "$SHOW_GIT" = "1" ] && { cols+=(--column="$T_COL_GIT"); n=4; }
     case "$DIALOG" in
-        zenity) zenity --list --title="cc-picker" --text="$T_PICK_PROJECT" \
-                    --column="$T_COL_PROJECT" --column="$T_COL_LAST" \
+        zenity) zenity --list --title="cc-picker" --text="$T_PICK_PROJECT" "${cols[@]}" \
+                    --hide-column=1 --print-column=1 \
                     --ok-label="$T_BTN_START" --cancel-label="$T_BTN_CANCEL" \
-                    "$@" --print-column=1 --height=420 --width=460 ;;
-        yad)    yad --list --title="cc-picker" "${ICON_ARGS[@]}" --text="$T_PICK_PROJECT" \
-                    --column="$T_COL_PROJECT" --column="$T_COL_LAST" \
+                    "$@" --height=460 --width=560 ;;
+        yad)    yad --list --title="cc-picker" "${ICON_ARGS[@]}" --text="$T_PICK_PROJECT" "${cols[@]}" \
+                    --hide-column=1 --print-column=1 --separator="" \
                     --button="$T_BTN_CANCEL:1" --button="$T_BTN_START:0" \
-                    "$@" --print-column=1 --separator="" --height=420 --width=460 ;;
+                    "$@" --height=460 --width=560 ;;
         kdialog)
-            while [ $# -gt 0 ]; do
-                if [ -n "$2" ]; then args+=("$1" "$1   ($2)"); else args+=("$1" "$1"); fi
-                shift 2
+            while [ $# -ge "$n" ]; do
+                if [ "$n" = "4" ]; then detail="$(join_details "$3" "$4")"; else detail="$3"; fi
+                if [ -n "$detail" ]; then args+=("$1" "$2   ($detail)"); else args+=("$1" "$2"); fi
+                shift "$n"
             done
             kdialog --title "cc-picker" "${ICON_ARGS[@]}" \
                 --ok-label "$T_BTN_START" --cancel-label "$T_BTN_CANCEL" \
@@ -238,16 +412,30 @@ dlg_projects() {
     esac
 }
 
-# dlg_entry <title> <text> — prints the entered text
+# dlg_entry <title> <text> [<prefill>] — prints the entered text
 dlg_entry() {
+    local prefill="${3:-}"
     case "$DIALOG" in
-        zenity)  zenity --entry --title="$1" --text="$2" \
+        zenity)  zenity --entry --title="$1" --text="$2" --entry-text="$prefill" \
                      --ok-label="$T_BTN_NEXT" --cancel-label="$T_BTN_CANCEL" ;;
-        yad)     yad --entry --title="$1" "${ICON_ARGS[@]}" --text="$2" \
+        yad)     yad --entry --title="$1" "${ICON_ARGS[@]}" --text="$2" --entry-text="$prefill" \
                      --button="$T_BTN_CANCEL:1" --button="$T_BTN_NEXT:0" ;;
         kdialog) kdialog --title "$1" "${ICON_ARGS[@]}" \
                      --ok-label "$T_BTN_NEXT" --cancel-label "$T_BTN_CANCEL" \
-                     --inputbox "$2" ;;
+                     --inputbox "$2" "$prefill" ;;
+        *) return 1 ;;
+    esac
+}
+
+# dlg_question <text> <ok-label> — succeeds if the user confirms
+dlg_question() {
+    case "$DIALOG" in
+        zenity)  zenity --question --title="cc-picker" --text="$1" \
+                     --ok-label="$2" --cancel-label="$T_BTN_CANCEL" ;;
+        yad)     yad --title="cc-picker" "${ICON_ARGS[@]}" --image=dialog-question --text="$1" \
+                     --button="$T_BTN_CANCEL:1" --button="$2:0" ;;
+        kdialog) kdialog --title "cc-picker" "${ICON_ARGS[@]}" \
+                     --yes-label "$2" --no-label "$T_BTN_CANCEL" --yesno "$1" ;;
         *) return 1 ;;
     esac
 }
@@ -258,6 +446,16 @@ dlg_error() {
         zenity)  zenity --error --title="cc-picker" --text="$1" ;;
         yad)     yad --title="cc-picker" "${ICON_ARGS[@]}" --image=dialog-error --text="$1" --button=OK ;;
         kdialog) kdialog --title "cc-picker" "${ICON_ARGS[@]}" --error "$1" ;;
+        *) return 1 ;;
+    esac
+}
+
+# dlg_info <text>
+dlg_info() {
+    case "$DIALOG" in
+        zenity)  zenity --info --title="cc-picker" --text="$1" ;;
+        yad)     yad --title="cc-picker" "${ICON_ARGS[@]}" --image=dialog-information --text="$1" --button=OK ;;
+        kdialog) kdialog --title "cc-picker" "${ICON_ARGS[@]}" --msgbox "$1" ;;
         *) return 1 ;;
     esac
 }
@@ -281,6 +479,84 @@ dlg_busy() {
     esac
 }
 
+# say <gui:0|1> <text> — an error or notice as a dialog (GUI) or on stderr
+say() {
+    if [ "$1" = "1" ]; then
+        dlg_error "$2" || true
+    else
+        echo "$2" >&2
+    fi
+}
+
+# --- Terminal menu ---
+# fzf is used when it's installed and we're on a real terminal; otherwise a
+# numbered menu that also accepts text to filter the list.
+fzf_ok() {
+    [ "$USE_FZF" = "1" ] && command -v fzf >/dev/null 2>&1 && [ -t 0 ] && [ -t 2 ]
+}
+
+# MENU_FILTER: optional texts to filter on, one per menu item (e.g. only the
+# project name, not the "2 h ago" details); falls back to the items
+MENU_FILTER=()
+
+# shell_menu <header> <item>... — prints the index of the chosen item;
+# fails on EOF (Ctrl+D) or Esc
+shell_menu() {
+    local header="$1"; shift
+    local items=("$@") filter=() shown=() matches=() i n reply needle redraw=1
+    if [ "${#MENU_FILTER[@]}" -eq "${#items[@]}" ]; then
+        filter=("${MENU_FILTER[@]}")
+    else
+        filter=("${items[@]}")
+    fi
+    if fzf_ok; then
+        for i in "${!items[@]}"; do printf '%s\t%s\n' "$i" "${items[$i]}"; done \
+            | fzf --delimiter=$'\t' --with-nth=2.. --header="$header" \
+                  --height=50% --reverse --no-multi \
+            | cut -f1
+        return
+    fi
+    shown=("${!items[@]}")
+    while true; do
+        if [ "$redraw" = "1" ]; then
+            echo "$header" >&2
+            echo >&2
+            n=1
+            for i in "${shown[@]}"; do
+                printf '%3d) %s\n' "$n" "${items[$i]}" >&2
+                n=$((n + 1))
+            done
+            redraw=0
+        fi
+        read -rp "#? " reply || return 1
+        reply="${reply#"${reply%%[![:space:]]*}"}"
+        reply="${reply%"${reply##*[![:space:]]}"}"
+        if [ -z "$reply" ]; then
+            shown=("${!items[@]}")
+            redraw=1
+            continue
+        fi
+        if [[ "$reply" =~ ^[0-9]+$ ]]; then
+            if [ "$reply" -ge 1 ] && [ "$reply" -le "${#shown[@]}" ]; then
+                echo "${shown[$((reply - 1))]}"
+                return 0
+            fi
+            echo "$T_INVALID" >&2
+            continue
+        fi
+        needle="${reply,,}"
+        matches=()
+        for i in "${!items[@]}"; do
+            [[ "${filter[$i],,}" == *"$needle"* ]] && matches+=("$i")
+        done
+        case "${#matches[@]}" in
+            0) printf "$T_NO_MATCH\n" "$reply" >&2 ;;
+            1) echo "${matches[0]}"; return 0 ;;
+            *) shown=("${matches[@]}"); redraw=1 ;;
+        esac
+    done
+}
+
 # --- Locate the claude binary ---
 find_claude_bin() {
     if [ -n "${CC_PICKER_BIN:-}" ]; then
@@ -301,12 +577,6 @@ find_claude_bin() {
         [ -x "$c" ] && { echo "$c"; return 0; }
     done
     return 1
-}
-
-CLAUDE_BIN="$(find_claude_bin)" || {
-    dlg_error "$T_NO_CLAUDE" 2>/dev/null \
-        || echo "cc-picker: $T_NO_CLAUDE" >&2
-    exit 1
 }
 
 # --- Locate a terminal emulator ---
@@ -339,7 +609,19 @@ find_user_shell() {
 }
 USER_SHELL="$(find_user_shell)"
 
-mkdir -p "$BASE"
+# --- Graphical editor for "Open in editor": CC_PICKER_EDITOR (a command,
+# optionally with options, e.g. "code -n"), else the first one found ---
+find_editor() {
+    if [ -n "${CC_PICKER_EDITOR:-}" ]; then
+        echo "$CC_PICKER_EDITOR"
+        return 0
+    fi
+    for e in code codium zed subl; do
+        command -v "$e" >/dev/null 2>&1 && { echo "$e"; return 0; }
+    done
+    return 1
+}
+EDITOR_CMD="$(find_editor || echo "")"
 
 # open_terminal <dir> <command> [args...] — runs the command in a new
 # terminal window, then keeps the user's shell open in <dir>
@@ -357,23 +639,79 @@ open_terminal() {
         alacritty)        alacritty --working-directory "$dir" -e bash -c "$full_cmd" ;;
         kitty)            kitty --directory "$dir" bash -c "$full_cmd" ;;
         xterm)            (cd "$dir" && xterm -e bash -c "$full_cmd") ;;
-        *)                echo "$T_NO_TERMINAL"; return 1 ;;
+        *)                echo "$T_NO_TERMINAL" >&2; return 1 ;;
     esac
 }
 
-# --- Recently used projects: "<epoch> <name>" lines, newest first ---
-# Stored locally only; lines for projects that no longer exist are ignored.
+# --- Recently used projects: "<epoch> <path>" lines, newest first ---
+# Stored locally only. Lines from cc-picker 0.2 hold a bare name, which is
+# resolved against the first projects folder.
+
+# read_recent — prints "<epoch>\t<path>" lines
+read_recent() {
+    local ts rest
+    [ -f "$RECENT_FILE" ] || return 0
+    while read -r ts rest; do
+        [ -n "$rest" ] || continue
+        case "$rest" in /*) ;; *) rest="$BASE/$rest" ;; esac
+        printf '%s\t%s\n' "$ts" "$rest"
+    done < "$RECENT_FILE"
+}
+
 mark_used() {
-    local name="$1" tmp
-    mkdir -p "$(dirname "$RECENT_FILE")"
+    local tmp
+    mkdir -p "$STATE_DIR"
     tmp="$(mktemp "$RECENT_FILE.XXXXXX")"
     {
-        printf '%s %s\n' "$(date +%s)" "$name"
-        if [ -f "$RECENT_FILE" ]; then
-            awk -v n="$name" '{ t=$1; sub(/^[0-9]+ /, ""); if ($0 != n) print t " " $0 }' "$RECENT_FILE"
-        fi
-    } | head -n "$RECENT_MAX" > "$tmp"
+        printf '%s %s\n' "$(date +%s)" "$1"
+        read_recent | P="$1" awk -F'\t' '$2 != ENVIRON["P"] { print $1 " " $2 }'
+    } | awk -v max="$RECENT_MAX" 'NR <= max' > "$tmp"
     mv "$tmp" "$RECENT_FILE"
+}
+
+# --- Pinned projects: one path per line, listed before all others ---
+declare -A PINNED=()
+load_pins() {
+    local line
+    PINNED=()
+    [ -f "$PINNED_FILE" ] || return 0
+    while IFS= read -r line; do
+        [ -n "$line" ] && PINNED[$line]=1
+    done < "$PINNED_FILE"
+    return 0
+}
+
+is_pinned() { [ -n "${PINNED[$1]:-}" ]; }
+
+toggle_pin() {
+    load_pins
+    mkdir -p "$STATE_DIR"
+    if is_pinned "$1"; then
+        rewrite_state "$1" "" pinned
+    else
+        printf '%s\n' "$1" >> "$PINNED_FILE"
+    fi
+}
+
+# rewrite_state <old-path> <new-path> [pinned] — updates the recent and
+# pinned lists after a rename; an empty <new-path> removes the entry. With
+# "pinned", only the pinned list is changed.
+rewrite_state() {
+    local tmp
+    if [ "${3:-}" != "pinned" ] && [ -f "$RECENT_FILE" ]; then
+        tmp="$(mktemp "$RECENT_FILE.XXXXXX")"
+        read_recent | O="$1" N="$2" awk -F'\t' '
+            $2 == ENVIRON["O"] { if (ENVIRON["N"] == "") next; print $1 " " ENVIRON["N"]; next }
+            { print $1 " " $2 }' > "$tmp"
+        mv "$tmp" "$RECENT_FILE"
+    fi
+    if [ -f "$PINNED_FILE" ]; then
+        tmp="$(mktemp "$PINNED_FILE.XXXXXX")"
+        O="$1" N="$2" awk '
+            $0 == ENVIRON["O"] { if (ENVIRON["N"] == "") next; print ENVIRON["N"]; next }
+            { print }' "$PINNED_FILE" > "$tmp"
+        mv "$tmp" "$PINNED_FILE"
+    fi
 }
 
 # ago <epoch> — prints a short relative time
@@ -387,37 +725,245 @@ ago() {
     fi
 }
 
-# list_projects — prints "<epoch>\t<name>" for every project folder:
-# recently used first, then the rest alphabetically. Epoch 0 means "never
-# used" – an empty first field would be swallowed by `read`, because a tab
-# counts as whitespace in IFS.
-list_projects() {
-    local ts name
-    declare -A seen=()
-    if [ -f "$RECENT_FILE" ]; then
-        while read -r ts name; do
-            if [ -n "$name" ] && [ -d "$BASE/$name" ] && [ -z "${seen[$name]:-}" ]; then
-                seen[$name]=1
-                printf '%s\t%s\n' "$ts" "$name"
-            fi
-        done < "$RECENT_FILE"
-    fi
-    # NUL-separated, so no folder name can split into two entries; names with
-    # control characters (created outside cc-picker) are skipped
-    while IFS= read -r -d '' name; do
-        case "$name" in *[[:cntrl:]]*) continue ;; esac
-        [ -z "${seen[$name]:-}" ] && printf '0\t%s\n' "$name"
-    done < <(find "$BASE" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%f\0' | sort -z)
-    return 0
+# join_details <text>... — joins the non-empty arguments with " · "
+join_details() {
+    local out="" part
+    for part in "$@"; do
+        [ -n "$part" ] || continue
+        if [ -n "$out" ]; then out="$out · $part"; else out="$part"; fi
+    done
+    printf '%s' "$out"
 }
 
-# A project name must be a single, plain folder name inside $BASE: no "/",
-# no control characters (tabs and newlines would break the list formats),
-# no leading "." or "-", no leading or trailing whitespace
+# git_info <dir> — prints "<branch>" or "<branch> · <n> changed" for Git
+# repositories; nothing for other folders, on errors or after 2 seconds
+TIMEOUT=()
+command -v timeout >/dev/null 2>&1 && TIMEOUT=(timeout 2)
+git_info() {
+    local out branch n
+    [ "$GIT_STATUS" = "1" ] && [ -e "$1/.git" ] || return 0
+    command -v git >/dev/null 2>&1 || return 0
+    out="$(GIT_OPTIONAL_LOCKS=0 "${TIMEOUT[@]}" git -C "$1" status --porcelain=v1 -b 2>/dev/null)" || return 0
+    branch="${out%%$'\n'*}"
+    branch="${branch#\#\# }"
+    case "$branch" in
+        "No commits yet on "*) branch="${branch#No commits yet on }" ;;
+        "Initial commit on "*) branch="${branch#Initial commit on }" ;;
+        "HEAD (no branch)"*)   branch="$T_GIT_DETACHED" ;;
+    esac
+    branch="${branch%%...*}"
+    branch="${branch%% \[*}"
+    n=$(( $(printf '%s\n' "$out" | wc -l) - 1 ))
+    if [ "$n" -gt 0 ]; then
+        join_details "$branch" "$(printf "$T_GIT_CHANGED" "$n")"
+    else
+        printf '%s' "$branch"
+    fi
+}
+
+# in_bases <path> — succeeds if <path> lies directly inside one of the
+# projects folders
+in_bases() {
+    local b dir="${1%/*}"
+    for b in "${BASES[@]}"; do
+        [ "$dir" = "$b" ] && return 0
+    done
+    return 1
+}
+
+# label_for <path> — the project's name; projects from further projects
+# folders get that folder's name as prefix, e.g. "code/my-app"
+label_for() {
+    local dir="${1%/*}"
+    if [ "$dir" = "$BASE" ]; then
+        printf '%s' "${1##*/}"
+    else
+        printf '%s/%s' "${dir##*/}" "${1##*/}"
+    fi
+}
+
+# A project name must be a single, plain folder name inside a projects
+# folder: no "/", no control characters (tabs and newlines would break the
+# list formats), no leading "." or "-", no leading or trailing whitespace
 valid_name() {
     case "$1" in
         ""|.*|-*|*/*|*[[:cntrl:]]*|[[:space:]]*|*[[:space:]]) return 1 ;;
     esac
+}
+
+# collect_projects — fills the P_* arrays: pinned projects first, then the
+# recently used ones, then the rest alphabetically per projects folder.
+# Must run in the current shell (not in $(...)).
+P_PATH=() P_LABEL=() P_TS=() P_GIT=()
+SHOW_GIT=0
+collect_projects() {
+    local ts path name base pass
+    local ordered=()
+    declare -A seen=() ts_of=()
+    P_PATH=() P_LABEL=() P_TS=() P_GIT=()
+    SHOW_GIT=0
+    load_pins
+    while IFS=$'\t' read -r ts path; do
+        [ -z "${seen[$path]:-}" ] || continue
+        if [ ! -d "$path" ] || ! in_bases "$path" || ! valid_name "${path##*/}"; then
+            continue
+        fi
+        seen[$path]=1
+        ts_of[$path]="$ts"
+        ordered+=("$path")
+    done < <(read_recent)
+    for base in "${BASES[@]}"; do
+        [ -d "$base" ] || continue
+        # NUL-separated, so no folder name can split into two entries; names
+        # with control characters (created outside cc-picker) are skipped
+        while IFS= read -r -d '' name; do
+            case "$name" in *[[:cntrl:]]*) continue ;; esac
+            path="$base/$name"
+            [ -z "${seen[$path]:-}" ] || continue
+            seen[$path]=1
+            ts_of[$path]=0
+            ordered+=("$path")
+        done < <(find "$base" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%f\0' | sort -z)
+    done
+    for pass in pinned rest; do
+        for path in "${ordered[@]}"; do
+            if is_pinned "$path"; then
+                [ "$pass" = "pinned" ] || continue
+            else
+                [ "$pass" = "rest" ] || continue
+            fi
+            P_PATH+=("$path")
+            P_LABEL+=("$(label_for "$path")")
+            P_TS+=("${ts_of[$path]}")
+            P_GIT+=("$(git_info "$path")")
+            [ -z "${P_GIT[-1]}" ] || SHOW_GIT=1
+        done
+    done
+    return 0
+}
+
+# display_label <index> — the label, with a star for pinned projects
+display_label() {
+    if is_pinned "${P_PATH[$1]}"; then
+        printf '★ %s' "${P_LABEL[$1]}"
+    else
+        printf '%s' "${P_LABEL[$1]}"
+    fi
+}
+
+last_used() {
+    [ "${P_TS[$1]}" = "0" ] || ago "${P_TS[$1]}"
+}
+
+# shell_row <index> — one line of the terminal menu
+shell_row() {
+    local detail
+    detail="$(join_details "$(last_used "$1")" "${P_GIT[$1]}")"
+    if [ -n "$detail" ]; then
+        printf '%s   (%s)' "$(display_label "$1")" "$detail"
+    else
+        display_label "$1"
+    fi
+}
+
+# resolve_project <query> — prints the path of the project named <query>:
+# "-" is the most recently used one; otherwise the exact name, then a
+# unique beginning of a name (case-insensitive)
+resolve_project() {
+    local query="$1" i matches=() lower best="" best_ts=0
+    collect_projects
+    if [ "$query" = "-" ]; then
+        for i in "${!P_PATH[@]}"; do
+            if [ "${P_TS[$i]}" -gt "$best_ts" ]; then
+                best="${P_PATH[$i]}"
+                best_ts="${P_TS[$i]}"
+            fi
+        done
+        [ -n "$best" ] || { echo "cc-picker: $T_NO_RECENT" >&2; return 1; }
+        echo "$best"
+        return 0
+    fi
+    for i in "${!P_PATH[@]}"; do
+        [ "${P_LABEL[$i]}" = "$query" ] && { echo "${P_PATH[$i]}"; return 0; }
+    done
+    for i in "${!P_PATH[@]}"; do
+        [ "${P_PATH[$i]##*/}" = "$query" ] && matches+=("$i")
+    done
+    if [ "${#matches[@]}" -eq 0 ]; then
+        lower="${query,,}"
+        for i in "${!P_PATH[@]}"; do
+            if [[ "${P_LABEL[$i],,}" == "$lower"* || "${P_PATH[$i]##*/}" == "$query"* ]]; then
+                matches+=("$i")
+            fi
+        done
+    fi
+    case "${#matches[@]}" in
+        0) printf "cc-picker: $T_NOT_FOUND\n" "$query" >&2; return 1 ;;
+        1) echo "${P_PATH[${matches[0]}]}" ;;
+        *) printf "cc-picker: $T_AMBIGUOUS\n" "$query" >&2
+           for i in "${matches[@]}"; do echo "  ${P_LABEL[$i]}" >&2; done
+           return 1 ;;
+    esac
+}
+
+# --- Claude sessions ---
+# Claude Code keeps a project's sessions in <config>/projects/<path>, with
+# every character other than A-Z, a-z and 0-9 replaced by "-".
+has_sessions() {
+    local dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/${1//[^a-zA-Z0-9]/-}"
+    [ -d "$dir" ] && [ -n "$(find "$dir" -maxdepth 1 -name '*.jsonl' -print -quit 2>/dev/null)" ]
+}
+
+# choose_session <path> <gui:0|1> — prints new, continue or resume. Asks
+# only if CC_PICKER_SESSION is "ask" and the project already has a session.
+choose_session() {
+    local path="$1" gui="$2" text key idx keys=(new continue resume)
+    case "$SESSION_MODE" in
+        new) echo new; return 0 ;;
+        continue|resume|ask) ;;
+        *) SESSION_MODE=ask ;;
+    esac
+    has_sessions "$path" || { echo new; return 0; }
+    [ "$SESSION_MODE" = "ask" ] || { echo "$SESSION_MODE"; return 0; }
+    text="$(printf "$T_SESSION_TEXT" "$(label_for "$path")")"
+    if [ "$gui" = "1" ]; then
+        key=$(dlg_menu "$text" "$T_BTN_START" "$T_COL_START" \
+                new "$T_SESSION_NEW" continue "$T_SESSION_CONTINUE" resume "$T_SESSION_RESUME") || return 1
+        [ -n "$key" ] || return 1
+        echo "$key"
+    else
+        idx=$(shell_menu "$text" "$T_SESSION_NEW" "$T_SESSION_CONTINUE" "$T_SESSION_RESUME") || return 1
+        [ -n "$idx" ] || return 1
+        echo "${keys[$idx]}"
+    fi
+}
+
+# launch <path> <new|continue|resume> <here|terminal> — starts claude in
+# <path>: "here" replaces this process, "terminal" opens a new window
+launch() {
+    local path="$1" mode="$2" where="$3" args=()
+    case "$mode" in
+        continue) args=(--continue) ;;
+        resume)   args=(--resume) ;;
+    esac
+    mark_used "$path"
+    if [ "$where" = "here" ]; then
+        cd "$path" || exit 1
+        exec "$CLAUDE_BIN" "${args[@]}"
+    fi
+    open_terminal "$path" "$CLAUDE_BIN" "${args[@]}"
+}
+
+# --- New projects ---
+
+# expand_clone_url <text> — the GitHub shorthand "user/repo" becomes
+# https://github.com/user/repo.git; anything else is returned unchanged
+expand_clone_url() {
+    if [[ "$1" =~ ^[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+$ ]] && [ ! -e "$1" ]; then
+        printf 'https://github.com/%s.git' "${1%.git}"
+    else
+        printf '%s' "$1"
+    fi
 }
 
 # clone <url> <target> <gui:0|1> — shows progress in GUI mode
@@ -437,99 +983,374 @@ clone() {
     return "$rc"
 }
 
-# create_project <name> <clone_url> <gui:0|1> — prints the project path
+# list_templates — prints the template names, NUL-separated
+list_templates() {
+    [ -d "$TEMPLATE_DIR" ] || return 0
+    find "$TEMPLATE_DIR" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%f\0' | sort -z
+}
+
+# choose_template <gui:0|1> — prints the chosen template name, or nothing
+# for an empty folder; asks only if there are templates
+choose_template() {
+    local gui="$1" templates=() items=() labels=() t idx key
+    mapfile -d '' templates < <(list_templates)
+    [ "${#templates[@]}" -gt 0 ] || return 0
+    labels=("$T_TEMPLATE_EMPTY")
+    items=(empty "$T_TEMPLATE_EMPTY")
+    for idx in "${!templates[@]}"; do
+        t="$(printf "$T_TEMPLATE_ITEM" "${templates[$idx]}")"
+        labels+=("$t")
+        items+=("t$idx" "$t")
+    done
+    if [ "$gui" = "1" ]; then
+        key=$(dlg_menu "$T_TEMPLATE_TEXT" "$T_BTN_NEXT" "$T_COL_TEMPLATE" "${items[@]}") || return 1
+        [ -n "$key" ] || return 1
+        [ "$key" = "empty" ] || echo "${templates[${key#t}]}"
+    else
+        idx=$(shell_menu "$T_TEMPLATE_TEXT" "${labels[@]}") || return 1
+        [ -n "$idx" ] || return 1
+        [ "$idx" = "0" ] || echo "${templates[$((idx - 1))]}"
+    fi
+    return 0
+}
+
+# apply_template <template> <target> <name> — copies the template, fills in
+# {{PROJECT_NAME}} in its text files and runs git init
+apply_template() {
+    local src="$TEMPLATE_DIR/$1" target="$2" name="$3" f content
+    cp -a "$src/." "$target/"
+    while IFS= read -r -d '' f; do
+        grep -qIF '{{PROJECT_NAME}}' "$f" || continue
+        content="$(cat "$f"; printf x)"
+        content="${content%x}"
+        printf '%s' "${content//"{{PROJECT_NAME}}"/"$name"}" > "$f"
+    done < <(find "$target" -type f ! -path "$target/.git/*" -print0)
+    if command -v git >/dev/null 2>&1 && [ ! -e "$target/.git" ]; then
+        git -C "$target" init -q >&2 || true
+    fi
+}
+
+# create_project <name> <clone-url> <template> <gui:0|1> — prints the path
 create_project() {
-    local target="$BASE/$1" clone_url="$2" gui="$3"
+    local target="$BASE/$1" clone_url="$2" template="$3" gui="$4"
     if [ -n "$clone_url" ]; then
         clone "$clone_url" "$target" "$gui" || return 1
     else
         mkdir -p "$target"
+        [ -z "$template" ] || apply_template "$template" "$target" "$1"
     fi
     echo "$target"
 }
 
-new_project_gui() {
-    local new_name clone_url
-    CLONE_ERROR=""
+# ask_new_name <gui:0|1> <title> <text> <dir> [<prefill>] — asks until the
+# name is valid and not taken in <dir>; prints it
+ask_new_name() {
+    local gui="$1" title="$2" text="$3" dir="$4" prefill="${5:-}" name
     while true; do
-        new_name=$(dlg_entry "$T_NEW_TITLE" "$T_NEW_NAME") || return 1
-        [ -z "$new_name" ] && return 1
-        valid_name "$new_name" && break
-        dlg_error "$T_BAD_NAME" || true
-    done
-    # Cancel aborts; an empty field with "Next" means "empty folder"
-    clone_url=$(dlg_entry "$T_CLONE_TITLE" "$T_CLONE_GUI") || return 1
-    create_project "$new_name" "$clone_url" 1 || {
-        dlg_error "$T_CLONE_FAIL $clone_url
-$CLONE_ERROR" || true
-        return 1
-    }
-}
-
-new_project_shell() {
-    local new_name clone_url
-    while true; do
-        read -rp "$T_NEW_NAME " new_name || return 1
-        [ -z "$new_name" ] && return 1
-        valid_name "$new_name" && break
-        echo "$T_BAD_NAME" >&2
-    done
-    # Ctrl+D aborts; an empty line means "empty folder"
-    read -rp "$T_CLONE_SHELL " clone_url || return 1
-    create_project "$new_name" "$clone_url" 0 || {
-        echo "$T_CLONE_FAIL $clone_url" >&2
-        return 1
-    }
-}
-
-# run_gui — project list in a dialog window; opens a new terminal with
-# claude in the chosen (or newly created) project
-run_gui() {
-    local items=("$T_NEW_ENTRY" "") choice target ts name last
-    while IFS=$'\t' read -r ts name; do
-        last=""
-        [ "$ts" != "0" ] && last="$(ago "$ts")"
-        items+=("$name" "$last")
-    done < <(list_projects)
-
-    choice=$(dlg_projects "${items[@]}") || exit 0
-    [ -z "$choice" ] && exit 0
-
-    if [ "$choice" == "$T_NEW_ENTRY" ]; then
-        target=$(new_project_gui) || exit 0
-    else
-        target="$BASE/$choice"
-    fi
-
-    mark_used "$(basename "$target")"
-    open_terminal "$target" "$CLAUDE_BIN"
-}
-
-# run_shell — numbered menu in the current terminal; replaces this process
-# with claude in the chosen (or newly created) project
-run_shell() {
-    local options=() choice target ts name
-    while IFS=$'\t' read -r ts name; do
-        options+=("$name")
-    done < <(list_projects)
-    options+=("$T_NEW_ENTRY")
-
-    echo "$T_SHELL_HEADER"
-    echo
-
-    # select returns non-zero on EOF (Ctrl+D); that's a normal way to quit
-    select choice in "${options[@]}"; do
-        [ -z "$choice" ] && { echo "$T_INVALID"; continue; }
-        if [ "$choice" == "$T_NEW_ENTRY" ]; then
-            target=$(new_project_shell) || exit 0
+        if [ "$gui" = "1" ]; then
+            name=$(dlg_entry "$title" "$text" "$prefill") || return 1
         else
-            target="$BASE/$choice"
+            read -rp "$text " name || return 1
         fi
-        mark_used "$(basename "$target")"
-        cd "$target" || exit 1
-        exec "$CLAUDE_BIN"
-    done || true
-    echo
+        [ -z "$name" ] && return 1
+        if ! valid_name "$name"; then
+            say "$gui" "$T_BAD_NAME"
+        elif [ -e "$dir/$name" ]; then
+            say "$gui" "$(printf "$T_EXISTS" "$name")"
+        else
+            echo "$name"
+            return 0
+        fi
+    done
+}
+
+# new_project <gui:0|1> — asks for name, Git URL and template; prints the
+# path of the new project
+new_project() {
+    local gui="$1" new_name clone_url template=""
+    CLONE_ERROR=""
+    new_name=$(ask_new_name "$gui" "$T_NEW_TITLE" "$T_NEW_NAME" "$BASE") || return 1
+    # Cancel/Ctrl+D aborts; an empty answer means "new project, no clone"
+    if [ "$gui" = "1" ]; then
+        clone_url=$(dlg_entry "$T_CLONE_TITLE" "$T_CLONE_GUI") || return 1
+    else
+        read -rp "$T_CLONE_SHELL " clone_url || return 1
+    fi
+    clone_url="$(expand_clone_url "$clone_url")"
+    if [ -z "$clone_url" ]; then
+        template=$(choose_template "$gui") || return 1
+    fi
+    create_project "$new_name" "$clone_url" "$template" "$gui" || {
+        if [ "$gui" = "1" ]; then
+            say 1 "$T_CLONE_FAIL $clone_url
+$CLONE_ERROR"
+        else
+            say 0 "$T_CLONE_FAIL $clone_url"
+        fi
+        return 1
+    }
+}
+
+# --- Managing projects ---
+
+# run_detached <command>... — starts a GUI program without waiting for it
+run_detached() {
+    if command -v setsid >/dev/null 2>&1; then
+        setsid -f "$@" >/dev/null 2>&1 < /dev/null || true
+    else
+        ("$@" >/dev/null 2>&1 < /dev/null &)
+    fi
+}
+
+# list_archived — prints the paths of archived projects, NUL-separated.
+# Each projects folder has its own archive folder.
+list_archived() {
+    local b
+    for b in "${BASES[@]}"; do
+        [ -d "$b/$ARCHIVE_NAME" ] || continue
+        find "$b/$ARCHIVE_NAME" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 | sort -z
+    done
+}
+
+# confirm <gui:0|1> <text> <ok-label> — asks a yes/no question
+confirm() {
+    local answer
+    if [ "$1" = "1" ]; then
+        dlg_question "$2" "$3"
+        return
+    fi
+    echo "$2" >&2
+    read -rp "$T_CONFIRM" answer || return 1
+    [[ "$answer" =~ ^[jJyY] ]]
+}
+
+# project_action <key> <path> <gui:0|1> — runs one of the manage actions
+project_action() {
+    local key="$1" path="$2" gui="$3" name new_name target editor=()
+    name="${path##*/}"
+    case "$key" in
+        files)
+            run_detached xdg-open "$path" ;;
+        editor)
+            read -ra editor <<< "$EDITOR_CMD"
+            run_detached "${editor[@]}" "$path" ;;
+        pin)
+            toggle_pin "$path" ;;
+        rename)
+            new_name=$(ask_new_name "$gui" "$T_ACT_RENAME" "$(printf "$T_RENAME_TEXT" "$name")" \
+                           "${path%/*}" "$name") || return 0
+            mv -- "$path" "${path%/*}/$new_name"
+            rewrite_state "$path" "${path%/*}/$new_name" ;;
+        archive)
+            target="${path%/*}/$ARCHIVE_NAME/$name"
+            [ ! -e "$target" ] || target="$target-$(date +%Y%m%d-%H%M%S)"
+            confirm "$gui" "$(printf "$T_ARCHIVE_ASK" "$name" "$target")" "$T_ACT_ARCHIVE" || return 0
+            mkdir -p "${target%/*}"
+            mv -- "$path" "$target"
+            rewrite_state "$path" "" ;;
+    esac
+}
+
+# manage_project <path> <gui:0|1> — shows the actions for one project
+manage_project() {
+    local path="$1" gui="$2" keys=() labels=() items=() i key="" idx text
+    load_pins
+    if command -v xdg-open >/dev/null 2>&1; then
+        keys+=(files)
+        labels+=("$T_ACT_FILES")
+    fi
+    if [ -n "$EDITOR_CMD" ]; then
+        keys+=(editor)
+        labels+=("$(printf "$T_ACT_EDITOR" "${EDITOR_CMD%% *}")")
+    fi
+    keys+=(pin)
+    if is_pinned "$path"; then labels+=("$T_ACT_UNPIN"); else labels+=("$T_ACT_PIN"); fi
+    keys+=(rename archive)
+    labels+=("$T_ACT_RENAME" "$T_ACT_ARCHIVE")
+    text="$(printf "$T_MANAGE_TEXT" "$(label_for "$path")")"
+    if [ "$gui" = "1" ]; then
+        for i in "${!keys[@]}"; do items+=("${keys[$i]}" "${labels[$i]}"); done
+        key=$(dlg_menu "$text" "$T_BTN_OK" "$T_COL_ACTION" "${items[@]}") || return 0
+    else
+        idx=$(shell_menu "$text" "${labels[@]}") || return 0
+        [ -z "$idx" ] || key="${keys[$idx]}"
+    fi
+    [ -z "$key" ] || project_action "$key" "$path" "$gui"
+    return 0
+}
+
+# restore_project <gui:0|1> — moves an archived project back
+restore_project() {
+    local gui="$1" archived=() labels=() items=() i key idx="" path target
+    mapfile -d '' archived < <(list_archived)
+    [ "${#archived[@]}" -gt 0 ] || return 0
+    for i in "${!archived[@]}"; do
+        path="${archived[$i]}"
+        labels+=("$(label_for "${path%/*/*}/${path##*/}")")
+        items+=("a$i" "${labels[-1]}")
+    done
+    if [ "$gui" = "1" ]; then
+        key=$(dlg_menu "$T_RESTORE_PICK" "$T_BTN_OK" "$T_COL_PROJECT" "${items[@]}") || return 0
+        idx="${key#a}"
+    else
+        idx=$(shell_menu "$T_RESTORE_PICK" "${labels[@]}") || return 0
+    fi
+    [ -n "$idx" ] || return 0
+    path="${archived[$idx]}"
+    target="${path%/*/*}/${path##*/}"
+    if [ -e "$target" ]; then
+        say "$gui" "$(printf "$T_EXISTS" "${path##*/}")"
+        return 0
+    fi
+    mv -- "$path" "$target"
+}
+
+# manage <gui:0|1> — pick a project (or the archive), then an action.
+# Uses the P_* arrays filled by the caller.
+manage() {
+    local gui="$1" items=() labels=() i key="" idx has_archive=0
+    [ -z "$(list_archived | head -c1)" ] || has_archive=1
+    for i in "${!P_PATH[@]}"; do
+        labels+=("$(display_label "$i")")
+        items+=("p$i" "${labels[-1]}")
+    done
+    if [ "$has_archive" = "1" ]; then
+        labels+=("$T_ACT_RESTORE")
+        items+=(restore "$T_ACT_RESTORE")
+    fi
+    [ "${#labels[@]}" -gt 0 ] || return 0
+    if [ "$gui" = "1" ]; then
+        key=$(dlg_menu "$T_MANAGE_PICK" "$T_BTN_NEXT" "$T_COL_PROJECT" "${items[@]}") || return 0
+    else
+        MENU_FILTER=("${P_LABEL[@]}")
+        [ "$has_archive" = "0" ] || MENU_FILTER+=("$T_ACT_RESTORE")
+        idx=$(shell_menu "$T_MANAGE_PICK" "${labels[@]}") || idx=""
+        MENU_FILTER=()
+        if [ -n "$idx" ]; then
+            if [ "$idx" -lt "${#P_PATH[@]}" ]; then key="p$idx"; else key=restore; fi
+        fi
+    fi
+    case "$key" in
+        "")      ;;
+        restore) restore_project "$gui" ;;
+        p*)      manage_project "${P_PATH[${key#p}]}" "$gui" ;;
+    esac
+    return 0
+}
+
+# --- Self-update ---
+# Installs the newest tagged release (or main, if there are no tags yet) of
+# UPDATE_REPO with its install.sh, if its version is newer than this one.
+UPDATE_TMP=""
+self_update() {
+    local tag new_version newest ref=()
+    command -v git >/dev/null 2>&1 || { echo "cc-picker: $T_UPD_NO_GIT" >&2; exit 1; }
+    printf "$T_UPD_CHECK\n" "$UPDATE_REPO" >&2
+    tag="$(git ls-remote --tags --refs -- "$UPDATE_REPO" 2>/dev/null \
+            | awk -F/ '{ print $NF }' | grep -E '^v?[0-9]+(\.[0-9]+)*$' | sort -V | tail -n1)" || true
+    [ -z "$tag" ] || ref=(--branch "$tag")
+    UPDATE_TMP="$(mktemp -d)"
+    trap 'rm -rf "$UPDATE_TMP"' EXIT
+    if ! git clone -q --depth 1 "${ref[@]}" -- "$UPDATE_REPO" "$UPDATE_TMP/cc-picker" >&2; then
+        echo "cc-picker: $T_UPD_FAIL git clone $UPDATE_REPO" >&2
+        exit 1
+    fi
+    new_version="$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$UPDATE_TMP/cc-picker/cc-picker.sh" | head -n1)"
+    if [ -z "$new_version" ] || [ ! -f "$UPDATE_TMP/cc-picker/install.sh" ]; then
+        echo "cc-picker: $T_UPD_FAIL $UPDATE_REPO" >&2
+        exit 1
+    fi
+    newest="$(printf '%s\n%s\n' "$VERSION" "$new_version" | sort -V | tail -n1)"
+    if [ "$newest" = "$VERSION" ]; then
+        printf "$T_UPD_CURRENT\n" "$VERSION"
+        exit 0
+    fi
+    printf "$T_UPD_INSTALL\n\n" "$VERSION" "$new_version"
+    bash "$UPDATE_TMP/cc-picker/install.sh"
+}
+
+# --- Project list: window ---
+# Opens a new terminal with claude in the chosen (or newly created) project.
+run_gui() {
+    local rows=() pad=() key path mode i n query="" matched
+    while true; do
+        collect_projects
+        n="${#P_PATH[@]}"
+        # every row needs a value per column: key, name, last used [, git]
+        pad=("")
+        [ "$SHOW_GIT" = "0" ] || pad+=("")
+        rows=(new "$T_NEW_ENTRY" "${pad[@]}")
+        [ "$n" -eq 0 ] || rows+=(manage "$T_MANAGE_ENTRY" "${pad[@]}")
+        if [ -n "$query" ]; then
+            rows+=(all "$T_SHOW_ALL" "${pad[@]}")
+        elif [ "$n" -ge "$SEARCH_MIN" ]; then
+            rows+=(search "$T_SEARCH_ENTRY" "${pad[@]}")
+        fi
+        matched=0
+        for i in "${!P_PATH[@]}"; do
+            [ -z "$query" ] || [[ "${P_LABEL[$i],,}" == *"${query,,}"* ]] || continue
+            rows+=("p$i" "$(display_label "$i")" "$(last_used "$i")")
+            [ "$SHOW_GIT" = "0" ] || rows+=("${P_GIT[$i]}")
+            matched=$((matched + 1))
+        done
+        if [ -n "$query" ] && [ "$matched" -eq 0 ]; then
+            dlg_info "$(printf "$T_NO_MATCH" "$query")" || true
+            query=""
+            continue
+        fi
+
+        key=$(dlg_projects "${rows[@]}") || exit 0
+        case "$key" in
+            new)    path=$(new_project 1) || continue
+                    mode=new ;;
+            manage) manage 1; continue ;;
+            all)    query=""; continue ;;
+            search) query=$(dlg_entry "$T_SEARCH_TITLE" "$T_SEARCH_TEXT") || query=""
+                    continue ;;
+            p*)     path="${P_PATH[${key#p}]}"
+                    mode=$(choose_session "$path" 1) || continue ;;
+            *)      exit 0 ;;
+        esac
+        launch "$path" "$mode" terminal
+        exit 0
+    done
+}
+
+# --- Project list: terminal menu ---
+# Replaces this process with claude in the chosen (or newly created) project.
+run_shell() {
+    local items=() idx n path mode i
+    while true; do
+        collect_projects
+        n="${#P_PATH[@]}"
+        items=()
+        for i in "${!P_PATH[@]}"; do items+=("$(shell_row "$i")"); done
+        items+=("$T_NEW_ENTRY")
+        MENU_FILTER=("${P_LABEL[@]}" "$T_NEW_ENTRY")
+        if [ "$n" -gt 0 ]; then
+            items+=("$T_MANAGE_ENTRY")
+            MENU_FILTER+=("$T_MANAGE_ENTRY")
+        fi
+
+        # EOF (Ctrl+D) or Esc in fzf is a normal way to quit
+        idx=$(shell_menu "$T_SHELL_HEADER" "${items[@]}") || idx=""
+        MENU_FILTER=()
+        if [ -z "$idx" ]; then
+            echo >&2
+            exit 0
+        fi
+        if [ "$idx" -lt "$n" ]; then
+            path="${P_PATH[$idx]}"
+            mode=$(choose_session "$path" 0) || continue
+        elif [ "$idx" -eq "$n" ]; then
+            path=$(new_project 0) || continue
+            mode=new
+        else
+            manage 0
+            continue
+        fi
+        launch "$path" "$mode" here
+    done
 }
 
 # Shell mode: in place when we have a terminal, else in a new terminal window
@@ -541,9 +1362,44 @@ start_shell_mode() {
     fi
 }
 
+# start_project <query> — starts claude right in the project named <query>:
+# in place when we have a terminal, else in a new terminal window
+start_project() {
+    local path mode gui=0
+    if ! path="$(resolve_project "$1")"; then
+        [ -t 0 ] || dlg_error "$(printf "$T_NOT_FOUND" "$1")" 2>/dev/null || true
+        exit 1
+    fi
+    [ -t 0 ] || [ -z "$DIALOG" ] || gui=1
+    mode=$(choose_session "$path" "$gui") || exit 0
+    if [ -t 0 ] || [ -z "$TERMINAL_BIN" ]; then
+        launch "$path" "$mode" here
+    else
+        launch "$path" "$mode" terminal
+    fi
+}
+
 # --- Main ---
-# --shell-mode → terminal menu in place; no dialog tool or terminal → terminal
-# menu; otherwise as set in CC_PICKER_MODE (default: project list window)
+if [ "$DO_UPDATE" = "1" ]; then
+    self_update
+    exit 0
+fi
+
+CLAUDE_BIN="$(find_claude_bin)" || {
+    dlg_error "$T_NO_CLAUDE" 2>/dev/null \
+        || echo "cc-picker: $T_NO_CLAUDE" >&2
+    exit 1
+}
+
+mkdir -p "$BASE"
+
+# A project on the command line → start right there; --shell-mode → terminal
+# menu in place; no dialog tool or terminal → terminal menu; otherwise as set
+# in CC_PICKER_MODE (default: project list window)
+if [ "$HAVE_PROJECT" = "1" ]; then
+    start_project "$PROJECT_ARG"
+    exit 0
+fi
 if [ "$SHELL_MODE" = "1" ]; then
     run_shell
     exit 0
@@ -556,11 +1412,12 @@ fi
 case "$START_MODE" in
     shell) start_shell_mode ;;
     ask)
-        mode=$(dlg_list "$T_PICK_MODE" "$T_BTN_NEXT" "$T_COL_MODE" "$T_MODE_GUI" "$T_MODE_SHELL") || exit 0
+        mode=$(dlg_menu "$T_PICK_MODE" "$T_BTN_NEXT" "$T_COL_MODE" \
+                   gui "$T_MODE_GUI" shell "$T_MODE_SHELL") || exit 0
         case "$mode" in
-            "$T_MODE_GUI")   run_gui ;;
-            "$T_MODE_SHELL") start_shell_mode ;;
-            *)               exit 0 ;;
+            gui)   run_gui ;;
+            shell) start_shell_mode ;;
+            *)     exit 0 ;;
         esac ;;
     *) run_gui ;;
 esac

@@ -14,6 +14,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN_DIR="$HOME/.local/bin"
 APP_DIR="$HOME/.local/share/applications"
 ICON_DIR="$HOME/.local/share/icons"
+TEMPLATE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/cc-picker/templates"
 
 # --- Output language: German for de_* locales, English otherwise ---
 UI_LANG="${CC_PICKER_LANG:-${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}}"
@@ -23,6 +24,8 @@ case "$UI_LANG" in
         T_SCRIPT="Skript: "
         T_MENU="Menü:   "
         T_ICON="Icon:   "
+        T_TEMPLATES="Vorlagen:"
+        T_TEMPLATES_KEPT="(vorhanden, nicht verändert)"
         T_IN_PATH="ist bereits im PATH."
         T_RC_HAS="enthält bereits einen Eintrag für ~/.local/bin."
         T_ADDED="Eintrag für ~/.local/bin ergänzt in"
@@ -49,6 +52,8 @@ case "$UI_LANG" in
         T_SCRIPT="Script: "
         T_MENU="Menu:   "
         T_ICON="Icon:   "
+        T_TEMPLATES="Templates:"
+        T_TEMPLATES_KEPT="(already there, left unchanged)"
         T_IN_PATH="is already in PATH."
         T_RC_HAS="already contains an entry for ~/.local/bin."
         T_ADDED="Added ~/.local/bin entry to"
@@ -117,10 +122,20 @@ Terminal=false
 Categories=Development;
 EOF
 
+# Project templates: installed only once, so your own changes are kept
+TEMPLATES_NOTE=""
+if [ -d "$TEMPLATE_DIR" ]; then
+    TEMPLATES_NOTE=" $T_TEMPLATES_KEPT"
+elif [ -d "$REPO_DIR/templates" ]; then
+    mkdir -p "$TEMPLATE_DIR"
+    cp -a "$REPO_DIR/templates/." "$TEMPLATE_DIR/"
+fi
+
 echo "$T_INSTALLED"
 echo "  $T_SCRIPT $BIN_DIR/cc-picker"
 echo "  $T_MENU $APP_DIR/cc-picker.desktop"
 echo "  $T_ICON $ICON_PATH"
+echo "  $T_TEMPLATES $TEMPLATE_DIR$TEMPLATES_NOTE"
 echo
 
 # --- Make sure ~/.local/bin is in PATH ---
