@@ -325,8 +325,20 @@ for data categories, storage, hosting and contact details.
 
 ## Contributing
 
+This is my first public open-source project, and I am still learning along
+the way. If you spot a mistake or have a suggestion, I welcome a friendly
+message or an issue. Thank you for your patience and for helping out!
+
+Please report security vulnerabilities privately using the reporting channel
+described in [SECURITY.md](SECURITY.md).
+
 Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
 [MIT](LICENSE)
+
+---
+
+ChatGPT and Claude Code assisted in the development of cc-picker. I maintain
+the project and make the decisions about changes and releases.

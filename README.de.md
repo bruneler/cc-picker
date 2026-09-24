@@ -329,8 +329,21 @@ Einzelheiten zu Daten, Speicherung, Hosting und Kontakt stehen in der
 
 ## Mitwirken
 
+Dies ist mein erstes öffentliches Open-Source-Projekt, und ich lerne dabei noch
+dazu. Wenn dir Fehler auffallen oder du Verbesserungsvorschläge hast, freue ich
+mich über einen freundlichen Hinweis oder ein Issue. Danke für deine Geduld
+und fürs Mithelfen!
+
+Sicherheitslücken bitte vertraulich über den in [SECURITY.md](SECURITY.md)
+beschriebenen Meldeweg melden.
+
 Issues und Pull Requests willkommen – siehe [CONTRIBUTING.md](CONTRIBUTING.md) (Englisch).
 
 ## Lizenz
 
 [MIT](LICENSE)
+
+---
+
+Bei der Entwicklung von cc-picker haben ChatGPT und Claude Code unterstützt.
+Ich betreue das Projekt und entscheide über Änderungen und Veröffentlichungen.
