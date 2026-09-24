@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+- Add a first-project welcome and an AI-assistance note to both READMEs
 - Explain website consent storage and cookie durations in plain language in German and English
 
 ## [0.3.1] – 2026-09-24
