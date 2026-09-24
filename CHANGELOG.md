@@ -8,6 +8,8 @@
   their filter texts as arguments instead of via a global variable, and the
   startup steps run from a `main()` function; behaviour is unchanged
 - Tests cover the error dialog after a failed `git clone` in the window mode
+- Answers typed in the terminal that look like `echo` options (e.g. `-n`) are
+  kept literally
 
 ## [0.3.2] – 2026-09-24
 

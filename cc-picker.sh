@@ -580,7 +580,7 @@ ui_menu() {
         [ -z "$idx" ] || key="${keys[$idx]}"
     fi
     [ -n "$key" ] || return 1
-    echo "$key"
+    printf '%s\n' "$key"
 }
 
 # ui_entry <title> <text> [<prefill>] — prints the entered text; fails on
@@ -592,7 +592,7 @@ ui_entry() {
         return
     fi
     read -rp "$2 " answer || return 1
-    echo "$answer"
+    printf '%s\n' "$answer"
 }
 
 # ui_confirm <text> <ok-label> — asks a yes/no question; succeeds on yes
@@ -1063,7 +1063,7 @@ choose_template() {
         items+=("t$idx" "$(printf "$T_TEMPLATE_ITEM" "${templates[$idx]}")")
     done
     key=$(ui_menu "$T_TEMPLATE_TEXT" "$T_BTN_NEXT" "$T_COL_TEMPLATE" "${items[@]}") || return 1
-    [ "$key" = "empty" ] || echo "${templates[${key#t}]}"
+    [ "$key" = "empty" ] || printf '%s\n' "${templates[${key#t}]}"
     return 0
 }
 

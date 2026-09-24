@@ -122,6 +122,13 @@ class Behavior(unittest.TestCase):
         self.assertFalse(self.marker.exists())
         self.assertFalse((self.base/'clone-failure').exists())
 
+    def test_option_like_clone_url_is_kept_literally(self):
+        # e.g. "-n" must reach git as a URL, not vanish and create an empty folder
+        r = self.run_picker('1\nx\n-n\n')
+        self.assertIn('git clone failed: -n', r.stderr)
+        self.assertFalse((self.base/'x').exists())
+        self.assertFalse(self.marker.exists())
+
     def test_eof_does_not_launch(self):
         self.run_picker('')
         self.assertFalse(self.marker.exists())
