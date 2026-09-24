@@ -65,3 +65,16 @@ Deferred: `--doctor`, adding existing directories, a maintainable translation
 architecture before French/Spanish, versioned/checksummed (optionally signed)
 release updates, and Arch plus Debian/Ubuntu CI coverage. No telemetry, key,
 provider or model management is introduced.
+
+
+## Ergänzung: Matomo am 24.09.2026
+
+Die frühere Aussage ohne Website-Analytics gilt für den damals geprüften Stand.
+Die Website erhält nun Matomo ausschließlich nach ausdrücklicher Zustimmung
+(Website-ID 4). DNT/GPC, Widerruf und 180-Tage-Ablauf werden berücksichtigt.
+Datenschutz und Einwilligung sind deutsch/englisch; die Datenschutzseite bleibt
+ohne Tracker. Launcher, Demo-Eingaben und lokale Projektdateien sind nicht Teil
+der Messung. Automatische Website-Veröffentlichung bleibt unverändert.
+
+Quellen: [Matomo-Einwilligung](https://developer.matomo.org/guides/tracking-consent)
+und [EDÖB-Informationspflicht](https://www.edoeb.admin.ch/de/informationspflicht).
