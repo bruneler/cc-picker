@@ -240,6 +240,11 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 .analytics-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 16px; }
 .analytics-actions button, [data-analytics-settings] { font: inherit; cursor: pointer; padding: 10px 16px; border: 1px solid currentColor; border-radius: 6px; background: var(--bg); color: var(--ink); }
 .analytics-actions button:focus-visible, [data-analytics-settings]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.analytics-actions button { transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
+.analytics-actions [data-analytics-choice="denied"]:is(:hover, :focus-visible) { background: #a52c32; border-color: #a52c32; color: #fff; }
+.analytics-actions [data-analytics-choice="granted"]:is(:hover, :focus-visible) { background: #216b43; border-color: #216b43; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .analytics-actions button { transition: none; } }
+
 </style>
 </head>
 <body data-level="plain">
