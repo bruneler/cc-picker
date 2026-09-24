@@ -3,7 +3,7 @@
 ## Supported versions
 
 Security fixes target the latest release in the **0.3.x** series (currently
-0.3.0). Please update to the latest patch release before reporting an issue.
+0.3.1). Please update to the latest patch release before reporting an issue.
 Older versions are not supported; `main` is development code, not a release.
 
 ## Report a vulnerability privately
@@ -30,4 +30,7 @@ installation, updates and the project's website or workflows are welcome.
 cc-picker launches your existing Claude Code installation; vulnerabilities in
 Claude Code itself should be reported to its vendor.
 
-cc-picker does not manage API keys, providers or models and has no telemetry.
+The installed cc-picker launcher does not manage API keys, providers or models
+and has no telemetry. The project website separately offers consent-based,
+self-hosted Matomo analytics. See the
+[privacy notice](https://cc-picker.brue.nu/privacy.html) for details and withdrawal.

@@ -1,16 +1,23 @@
 # Changelog
 
-## Unreleased
+## [0.3.1] – 2026-09-24
 
 ### Added
 - Security policy with a private reporting contact and supported versions
 - Security regression tests for shell metacharacters and path handling
+- Consent-based, self-hosted Matomo website statistics with a bilingual privacy
+  notice, withdrawal controls and DNT/GPC support
+- Automatic website deployment after successful main-branch checks
 
 ### Changed
 - Clarify runtime dependencies on the website and in both READMEs
+- Document Linux distribution compatibility and the limits of test coverage
+- Distinguish the telemetry-free launcher from optional website analytics in
+  both READMEs, the security policy and the website; document update connections
 
 ### Fixed
 - `--update` no longer prints Git's "detached HEAD" advice
+- Keep mobile language/detail controls on one row and clarify consent button feedback
 
 ## [0.3.0] – 2026-09-24
 
@@ -112,5 +119,6 @@ First public release.
 
 Initial version, not released.
 
+[0.3.1]: https://github.com/bruneler/cc-picker/releases/tag/v0.3.1
 [0.3.0]: https://github.com/bruneler/cc-picker/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bruneler/cc-picker/releases/tag/v0.2.0

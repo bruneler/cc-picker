@@ -301,12 +301,31 @@ ergänzten PATH-Eintrag (markiert mit `# added by cc-picker install.sh`)
 kannst du bei Bedarf aus deiner Shell-Config löschen.
 
 Einstellungen, Vorlagen, die Liste der zuletzt benutzten und der
-angehefteten Projekte liegen in kleinen lokalen Dateien – es wird nichts
-irgendwohin gesendet. Auch diese entfernen:
+angehefteten Projekte liegen in kleinen lokalen Dateien. Der Starter sendet
+diese Dateien weder an den Projektbetreiber noch an Matomo. Auch diese entfernen:
 
 ```bash
 rm -r ~/.config/cc-picker ~/.local/state/cc-picker
 ```
+
+## Datenschutz
+
+Der **installierte cc-picker-Starter hat keine Telemetrie**. Einstellungen,
+Projektverlauf und Vorlagen bleiben auf deinem Computer. Optionales Git-Klonen
+verbindet sich mit dem gewählten Remote; `cc-picker --update` verbindet sich
+mit GitHub (oder dem konfigurierten Update-Repository), und das Nachinstallieren
+fehlender Pakete kontaktiert deine Paketquellen. Claude Code und geöffnete
+Programme haben eigenes Netzwerkverhalten und eigene Datenschutzhinweise.
+
+Die **Projektwebsite** [cc-picker.brue.nu](https://cc-picker.brue.nu/)
+verwendet selbst betriebenes Matomo **nur nach deiner Zustimmung**, unabhängig
+vom Starter. Die aktuelle Datenschutzerklärung nennt vollständige IP-Adressen,
+Analyse-Cookies und keine technisch erzwungene automatische Löschfrist.
+Du kannst die Auswertung in den
+[Datenschutz-Einstellungen](https://cc-picker.brue.nu/#privacy-settings)
+ablehnen oder deine Zustimmung widerrufen; DNT und GPC werden berücksichtigt.
+Einzelheiten zu Daten, Speicherung, Hosting und Kontakt stehen in der
+[Datenschutzerklärung](https://cc-picker.brue.nu/privacy.html).
 
 ## Mitwirken
 
