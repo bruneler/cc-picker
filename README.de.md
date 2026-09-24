@@ -88,6 +88,22 @@ anlegen, optional mit `git clone`) → Claude Code startet direkt dort.
 | ⚙️ **Keine hartcodierten Pfade** | alles per Konfigurationsdatei oder Umgebungsvariablen einstellbar |
 | 🧩 **Desktop-Integration** | eigenes Icon im Anwendungsmenü |
 
+## Linux-Distributionen
+
+- **Arch Linux und Debian:** vom Maintainer im Einsatz bestätigt.
+- **Ubuntu:** automatisierte Prüfungen und Funktionstests laufen auf GitHub Actions
+  (`ubuntu-latest`), mit isolierten Testumgebungen ohne echte Claude-Sitzungen.
+  Das ist kein vollständiger Desktop-End-to-End-Test.
+- **Linux Mint, Manjaro, Fedora und openSUSE:** sollten mit den unten genannten
+  Abhängigkeiten funktionieren, sind aber noch nicht durch eigene Distributionstests
+  bestätigt. Der Installer erkennt `apt-get`, `pacman`, `dnf` und `zypper`.
+
+Benötigt werden Bash ab Version 4, GNU/Linux-Werkzeuge und eine funktionierende
+Claude-Code-Installation. Für das Auswahlfenster kommen `zenity`, `kdialog` oder
+`yad` und ein unterstützter Terminal-Emulator hinzu. Der Terminal-Modus benötigt
+keine bestimmte Desktop-Umgebung. Konkrete Distributionsversionen sind bisher
+nicht in einer Testmatrix erfasst.
+
 ## Installation
 
 ```bash

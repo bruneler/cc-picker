@@ -447,10 +447,11 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
     <ul class="needs">
       <li class="label" data-t="needs">You need:</li>
       <li>Linux</li>
-      <li>Bash</li>
+      <li>Bash ≥ 4</li>
       <li>Claude Code</li>
       <li class="opt" data-t="needsOpt">a desktop for the window (optional)</li>
     </ul>
+    <p class="sub" data-t="distros">Arch Linux and Debian: confirmed in use. Ubuntu: automated functional tests (no full desktop test). Linux Mint, Manjaro, Fedora and openSUSE: expected to work with the required dependencies, but not yet verified separately.</p>
     <div class="install">
       <div>
         <p class="sub plain" data-t="instSubP">Open a terminal, paste these two lines one after the other and press Enter each time. Done.</p>
@@ -491,7 +492,7 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
     </details>
     <details>
       <summary data-t="q5">Mac or Windows?</summary>
-      <p data-t="a5">Not at the moment – cc-picker is made for Linux with Bash. It's tested on GNOME; KDE and other desktops work through kdialog or yad.</p>
+      <p data-t="a5">Not at the moment – cc-picker is made for Linux with Bash. See the distribution test status in the installation section. The window uses zenity, kdialog or yad; terminal mode needs no desktop.</p>
     </details>
     <details>
       <summary data-t="q8">How do I update?</summary>
@@ -647,6 +648,8 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
     menuCapT:  { en: "<b>The menu.</b> Runs in place: a number picks, text filters, <code>fzf</code> takes over if installed; Ctrl+D quits with exit code 0.",
                  de: "<b>Das Menü.</b> Läuft direkt im Terminal: Zahl wählt, Text filtert, mit <code>fzf</code> falls installiert; Strg+D beendet mit Exit-Code 0." },
     instH:     { en: "Install it", de: "Installieren" },
+    distros:   { en: "Arch Linux and Debian: confirmed in use. Ubuntu: automated functional tests (no full desktop test). Linux Mint, Manjaro, Fedora and openSUSE: expected to work with the required dependencies, but not yet verified separately.",
+                 de: "Arch Linux und Debian: im Einsatz bestätigt. Ubuntu: automatisierte Funktionstests (kein vollständiger Desktop-Test). Linux Mint, Manjaro, Fedora und openSUSE: mit den nötigen Abhängigkeiten voraussichtlich nutzbar, aber noch nicht separat bestätigt." },
     needs:     { en: "You need:", de: "Du brauchst:" },
     needsOpt:  { en: "a desktop for the window (optional)", de: "einen Desktop fürs Fenster (optional)" },
     instSubP:  { en: "Open a terminal, paste these two lines one after the other and press Enter each time. Done.",
@@ -681,8 +684,8 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
     a4:        { en: "In <code>~/claude-projects</code> by default. To use another folder, write <code>CC_PICKER_BASE=~/somewhere/else</code> into <code>~/.config/cc-picker/config</code>. Several folders work too, separated by <code>:</code>.",
                  de: "Standardmäßig in <code>~/claude-projects</code>. Für einen anderen Ordner schreib <code>CC_PICKER_BASE=~/irgendwo/anders</code> in <code>~/.config/cc-picker/config</code>. Mehrere Ordner gehen auch, getrennt durch <code>:</code>." },
     q5:        { en: "Mac or Windows?", de: "Mac oder Windows?" },
-    a5:        { en: "Not at the moment – cc-picker is made for Linux with Bash. It's tested on GNOME; KDE and other desktops work through kdialog or yad.",
-                 de: "Im Moment nicht – cc-picker ist für Linux mit Bash gemacht. Getestet unter GNOME; KDE und andere Desktops funktionieren über kdialog oder yad." },
+    a5:        { en: "Not at the moment – cc-picker is made for Linux with Bash. See the distribution test status in the installation section. The window uses zenity, kdialog or yad; terminal mode needs no desktop.",
+                 de: "Im Moment nicht – cc-picker ist für Linux mit Bash gemacht. Den Teststand der Distributionen findest du im Installationsabschnitt. Das Fenster nutzt zenity, kdialog oder yad; der Terminal-Modus benötigt keinen Desktop." },
     q8:        { en: "How do I update?", de: "Wie aktualisiere ich?" },
     a8:        { en: "Run <code>cc-picker --update</code>. It installs the newest version if there is one, and keeps your settings, templates and project list.",
                  de: "Mit <code>cc-picker --update</code>. Es installiert die neueste Version, falls es eine gibt, und behält Einstellungen, Vorlagen und Projektliste." },
