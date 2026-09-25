@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Maintainer launch preparation: real-demo recording and export guide, README
+  and website integration templates, and reusable community post drafts
+
 ## [0.3.2] – 2026-09-24
 
 ### Added
