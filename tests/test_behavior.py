@@ -276,6 +276,8 @@ os.execvp(args[0], args)
         for _ in range(2):
             subprocess.run(['bash', str(ROOT/'install.sh')], env=self.env,
                            check=True, capture_output=True, timeout=10)
+        self.assertEqual((special/'.local/share/cc-picker/LICENSE').read_bytes(),
+                         (ROOT/'LICENSE').read_bytes())
         desktop = special/'.local/share/applications/cc-picker.desktop'
         subprocess.run(['desktop-file-validate', str(desktop)], check=True, capture_output=True)
         template = special/'.config/cc-picker/templates/standard'
@@ -539,7 +541,7 @@ os.execvp(args[0], args)
     def make_release(self, version):
         repo = self.home/'upstream'
         repo.mkdir()
-        for name in ('install.sh', 'cc-picker.svg'):
+        for name in ('install.sh', 'cc-picker.svg', 'LICENSE'):
             shutil.copy(ROOT/name, repo/name)
         shutil.copytree(ROOT/'templates', repo/'templates')
         script = (ROOT/'cc-picker.sh').read_text()
@@ -557,6 +559,8 @@ os.execvp(args[0], args)
         self.run_cmd('--update')
         installed = self.home/'.local/bin/cc-picker'
         self.assertIn('VERSION="9.9.9"', installed.read_text())
+        self.assertEqual((self.home/'.local/share/cc-picker/LICENSE').read_bytes(),
+                         (ROOT/'LICENSE').read_bytes())
 
     def test_update_when_current(self):
         version = re.search(r'^VERSION="(.*)"$', (ROOT/'cc-picker.sh').read_text(), re.M).group(1)

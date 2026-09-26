@@ -128,6 +128,7 @@ The installer sets up:
 | `~/.local/bin/cc-picker` | the executable script |
 | `~/.local/share/applications/cc-picker.desktop` | application menu entry |
 | `~/.local/share/icons/cc-picker.svg` | app icon |
+| `~/.local/share/cc-picker/LICENSE` | MIT license and copyright notice |
 | `~/.config/cc-picker/templates/` | project templates – installed once, your changes are kept |
 
 **PATH is set up automatically:** if `~/.local/bin` isn't in your `PATH`
@@ -307,7 +308,8 @@ On KDE, replace `zenity` with `kdialog`.
 ```bash
 rm ~/.local/bin/cc-picker \
    ~/.local/share/applications/cc-picker.desktop \
-   ~/.local/share/icons/cc-picker.svg
+   ~/.local/share/icons/cc-picker.svg \
+   ~/.local/share/cc-picker/LICENSE
 ```
 
 Your project folders are left untouched. If `install.sh` added a PATH entry
@@ -352,6 +354,11 @@ described in [SECURITY.md](SECURITY.md).
 Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
+
+The MIT license covers cc-picker’s original code and documentation. Bundled
+fonts and other third-party components retain their own licenses; see
+[Third-party notices](THIRD_PARTY_NOTICES.md). The installer also saves the
+MIT license to `~/.local/share/cc-picker/LICENSE`.
 
 [MIT](LICENSE)
 

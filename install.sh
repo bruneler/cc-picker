@@ -14,6 +14,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN_DIR="$HOME/.local/bin"
 APP_DIR="$HOME/.local/share/applications"
 ICON_DIR="$HOME/.local/share/icons"
+LICENSE_DIR="$HOME/.local/share/cc-picker"
 TEMPLATE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/cc-picker/templates"
 
 # --- Output language: German for de_* locales, English otherwise ---
@@ -77,7 +78,8 @@ case "$UI_LANG" in
         ;;
 esac
 
-mkdir -p "$BIN_DIR" "$APP_DIR" "$ICON_DIR"
+mkdir -p "$BIN_DIR" "$APP_DIR" "$ICON_DIR" "$LICENSE_DIR"
+cp "$REPO_DIR/LICENSE" "$LICENSE_DIR/LICENSE"
 
 cp "$REPO_DIR/cc-picker.sh" "$BIN_DIR/cc-picker"
 chmod +x "$BIN_DIR/cc-picker"
