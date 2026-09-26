@@ -24,6 +24,13 @@ instead of in your home directory or mixed up with other AI coding tools.
 
 Step-by-step instructions are available in the [user guide](https://cc-picker.brue.nu/manual.en.html).
 
+## See it in action
+
+![Real recording: select my-app in cc-picker; a terminal opens and Claude Code starts in that project.](website/assets/demo/cc-picker-demo.gif)
+
+Pick a project → Claude Code starts right there.
+[Watch the video with playback controls](https://cc-picker.brue.nu/#demo).
+
 ## How it works
 
 <p align="center">

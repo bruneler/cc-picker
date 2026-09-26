@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+- Real picker-to-Claude-Code demo in both READMEs and the website, with
+  video playback controls and English/German descriptions
+
 ### Changed
 - Internal cleanup of `cc-picker.sh`: questions go through shared `ui_*`
   functions instead of passing a GUI flag through every function, menus get
