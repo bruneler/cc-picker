@@ -25,7 +25,7 @@
 
 set -euo pipefail
 
-VERSION="0.3.2"
+VERSION="0.3.3"
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/cc-picker"
 CONFIG_FILE="$CONFIG_DIR/config"

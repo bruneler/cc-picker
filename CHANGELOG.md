@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.3.3] – 2026-09-26
 
 ### Added
 - Real picker-to-Claude-Code demo in both READMEs and the website, with
@@ -12,6 +12,8 @@
   their filter texts as arguments instead of via a global variable, and the
   startup steps run from a `main()` function; behaviour is unchanged
 - Tests cover the error dialog after a failed `git clone` in the window mode
+
+### Fixed
 - Answers typed in the terminal that look like `echo` options (e.g. `-n`) are
   kept literally
 
