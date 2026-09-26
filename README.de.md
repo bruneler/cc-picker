@@ -131,6 +131,7 @@ Das Skript installiert:
 | `~/.local/bin/cc-picker` | ausführbares Skript |
 | `~/.local/share/applications/cc-picker.desktop` | Eintrag im Anwendungsmenü |
 | `~/.local/share/icons/cc-picker.svg` | App-Icon |
+| `~/.local/share/cc-picker/LICENSE` | MIT-Lizenz und Copyright-Hinweis |
 | `~/.config/cc-picker/templates/` | Projektvorlagen – nur einmal installiert, deine Änderungen bleiben erhalten |
 
 **PATH wird automatisch eingerichtet:** Ist `~/.local/bin` noch nicht im
@@ -310,7 +311,8 @@ Unter KDE statt `zenity` einfach `kdialog` nehmen.
 ```bash
 rm ~/.local/bin/cc-picker \
    ~/.local/share/applications/cc-picker.desktop \
-   ~/.local/share/icons/cc-picker.svg
+   ~/.local/share/icons/cc-picker.svg \
+   ~/.local/share/cc-picker/LICENSE
 ```
 
 Deine Projektordner bleiben dabei unberührt. Einen von `install.sh`
@@ -357,6 +359,12 @@ beschriebenen Meldeweg melden.
 Issues und Pull Requests willkommen – siehe [CONTRIBUTING.md](CONTRIBUTING.md) (Englisch).
 
 ## Lizenz
+
+Die MIT-Lizenz gilt für den eigenen Code und die eigene Dokumentation von
+cc-picker. Mitgelieferte Schriften und andere Drittanbieter-Bestandteile behalten
+ihre eigenen Lizenzen; siehe [Drittanbieter-Hinweise](THIRD_PARTY_NOTICES.md)
+(Englisch). Der Installer speichert die MIT-Lizenz zusätzlich unter
+`~/.local/share/cc-picker/LICENSE`.
 
 [MIT](LICENSE)
 

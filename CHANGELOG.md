@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Third-party notices distinguishing website font licenses, Matomo, external
+  programs and third-party rights in demo recordings from the project MIT license
+
+### Fixed
+- Install the full MIT license alongside cc-picker and document its location
+
 ## [0.3.3] – 2026-09-26
 
 ### Added
