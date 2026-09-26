@@ -25,6 +25,13 @@ anderen KI-Coding-Tools.
 
 Schritt-für-Schritt-Erklärungen findest du im [Benutzerhandbuch](https://cc-picker.brue.nu/manual.html).
 
+## In Aktion
+
+![Echte Aufnahme: my-app in cc-picker wählen; ein Terminal öffnet sich und Claude Code startet in diesem Projekt.](website/assets/demo/cc-picker-demo.gif)
+
+Projekt wählen → Claude Code startet genau dort.
+[Video mit Wiedergabesteuerung ansehen](https://cc-picker.brue.nu/#demo).
+
 ## So funktioniert's
 
 <p align="center">

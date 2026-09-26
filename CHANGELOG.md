@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Real picker-to-Claude-Code demo in both READMEs and the website, with
+  video playback controls and English/German descriptions
+
 ## [0.3.2] – 2026-09-24
 
 ### Added
