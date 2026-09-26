@@ -311,6 +311,18 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
     </div>
   </section>
 
+  <section class="band" id="demo" aria-labelledby="demo-title">
+    <h2 id="demo-title" data-t="demoTitle">See it in action</h2>
+    <video controls playsinline preload="none" width="1280" height="720"
+           poster="assets/demo/cc-picker-demo-poster.png"
+           aria-labelledby="demo-title" aria-describedby="demo-description"
+           style="display:block;width:100%;height:auto">
+      <source src="assets/demo/cc-picker-demo.mp4" type="video/mp4">
+      <a href="assets/demo/cc-picker-demo.mp4" data-t="demoDownload">Download the demo video</a>
+    </video>
+    <p class="sub" id="demo-description" data-t="demoDescription">Real recording: select my-app in cc-picker; a terminal opens and Claude Code starts in that project.</p>
+  </section>
+
   <section class="band" id="why">
     <h2 data-t="whyH">Why bother?</h2>
     <p class="sub plain" data-t="whySubP">Claude Code treats the folder it starts in as your project. Starting it in the right one should take one click.</p>
@@ -535,6 +547,10 @@ $ cc-picker -c webapp   # or straight in, continuing</pre>
   // All translatable text. Plain strings are used as-is (innerHTML);
   // the HTML above holds the English version for first paint and no-JS.
   const T = {
+    demoTitle: { en: "See it in action", de: "In Aktion" },
+    demoDownload: { en: "Download the demo video", de: "Demo-Video herunterladen" },
+    demoDescription: { en: "Real recording: select my-app in cc-picker; a terminal opens and Claude Code starts in that project.",
+                       de: "Echte Aufnahme: my-app in cc-picker wählen; ein Terminal öffnet sich und Claude Code startet in diesem Projekt." },
     skip:      { en: "Skip to content", de: "Zum Inhalt springen" },
     navWhy:    { en: "Why", de: "Wozu" },
     navHow:    { en: "How it works", de: "So geht's" },
