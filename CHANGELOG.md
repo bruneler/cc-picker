@@ -6,6 +6,15 @@
 - Real picker-to-Claude-Code demo in both READMEs and the website, with
   video playback controls and English/German descriptions
 
+### Changed
+- Internal cleanup of `cc-picker.sh`: questions go through shared `ui_*`
+  functions instead of passing a GUI flag through every function, menus get
+  their filter texts as arguments instead of via a global variable, and the
+  startup steps run from a `main()` function; behaviour is unchanged
+- Tests cover the error dialog after a failed `git clone` in the window mode
+- Answers typed in the terminal that look like `echo` options (e.g. `-n`) are
+  kept literally
+
 ## [0.3.2] – 2026-09-24
 
 ### Added
@@ -136,6 +145,7 @@ First public release.
 
 Initial version, not released.
 
+[Unreleased]: https://github.com/bruneler/cc-picker/compare/v0.3.2...HEAD
 [0.3.2]: https://github.com/bruneler/cc-picker/releases/tag/v0.3.2
 [0.3.1]: https://github.com/bruneler/cc-picker/releases/tag/v0.3.1
 [0.3.0]: https://github.com/bruneler/cc-picker/releases/tag/v0.3.0
