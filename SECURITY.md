@@ -3,7 +3,7 @@
 ## Supported versions
 
 Security fixes target the latest release in the **0.3.x** series (currently
-0.3.2). Please update to the latest patch release before reporting an issue.
+0.3.3). Please update to the latest patch release before reporting an issue.
 Older versions are not supported; `main` is development code, not a release.
 
 ## Report a vulnerability privately
