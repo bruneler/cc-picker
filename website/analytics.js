@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   // Einwilligung gilt ausschließlich für diese Website und diesen Browser.
-  const key = 'cc-picker-matomo-consent-v1';
+  const key = 'cc-picker-matomo-consent-v2';
   const lifetime = 180 * 24 * 60 * 60 * 1000;
   const panel = document.querySelector('[data-analytics-panel]');
   const status = document.querySelector('[data-analytics-status]');
@@ -27,7 +27,20 @@
     choice = null; expires = 0;
   }
   const allowed = () => choice === 'granted' && expires > Date.now() && Boolean(siteId) && !privacySignal();
+  function clearAnalyticsCookies() {
+    // Remove earlier analytics cookies locally, without loading Matomo.
+    const names = (document.cookie || '').split(';').map(value => value.trim().split('=')[0])
+      .filter(name => /^_pk_[A-Za-z0-9_.-]+$/.test(name));
+    const domains = [''];
+    const parts = location.hostname.split('.');
+    while (parts.length > 1) { domains.push(parts.join('.')); parts.shift(); }
+    for (const name of names) for (const domain of domains) {
+      document.cookie = name + '=; Max-Age=0; Path=/; SameSite=Lax; Secure' +
+        (domain ? '; Domain=' + domain : '');
+    }
+  }
   function stop() {
+    clearAnalyticsCookies();
     if (!tracker) return;
     tracker.forgetConsentGiven();
     tracker.deleteCookies();
@@ -35,14 +48,14 @@
   const copy = {
     de: {
       title: 'Freiwillige Besucherstatistik',
-      info: 'Mit deiner Zustimmung verwenden wir unser eigenes Matomo, um Seitenaufrufe und Besuchsdauer auszuwerten. Dabei werden vollständige IP-Adressen, Browser-/Geräteangaben, ungefähre Standorte und Besuchsverläufe verarbeitet. Analyse-Cookies und deine Auswahl gelten bis zu 180 Tage. Ohne Zustimmung bleibt die Statistik aus; du kannst jederzeit widerrufen.',
+      info: 'Wir möchten verstehen, welche Inhalte dir helfen, und erfassen dafür möglichst wenige Daten. Wenn du zustimmst, werten wir mit unserem eigenen Matomo Seitenaufrufe, Besuchsdauer und wiederkehrende Besuche aus. Länder und Regionen helfen uns, Sprachen, Inhalte und Marketingmaßnahmen zu planen. Deine IP-Adresse wird vor dem Speichern gekürzt; Stadt und genaue Koordinaten speichern wir nicht. Ohne Zustimmung bleibt die Auswertung aus. Du kannst jederzeit über die Datenschutz-Einstellungen widerrufen.',
       allow: 'Erlauben', deny: 'Nicht erlauben', settings: 'Datenschutz-Einstellungen', details: 'Datenschutz im Detail',
       signal: 'Dein Browser signalisiert, dass du keine Messung möchtest. Die Auswertung bleibt aus.',
       on: 'Du hast die freiwillige Auswertung erlaubt.', off: 'Die freiwillige Auswertung ist ausgeschaltet.'
     },
     en: {
       title: 'Optional visitor statistics',
-      info: 'With your consent, we use our own Matomo to measure page views and visit duration. This processes full IP addresses, browser/device details, approximate locations and visit histories. Analytics cookies and your choice last up to 180 days. Statistics stay off without consent; you can withdraw it at any time.',
+      info: 'We want to understand which content helps you while collecting as little data as possible. With your consent, we use our own Matomo to analyse page views, visit duration and returning visits. Countries and regions help us plan languages, content and marketing activities. Your IP address is shortened before storage; we do not store your city or precise coordinates. Analytics stays off without consent. You can withdraw consent at any time through Privacy settings.',
       allow: 'Allow', deny: 'Do not allow', settings: 'Privacy settings', details: 'Privacy details',
       signal: 'Your browser requests no tracking. Statistics remain off.',
       on: 'You have allowed optional statistics.', off: 'Optional statistics are off.'
